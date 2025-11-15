@@ -1,10 +1,14 @@
-
+import { Outlet } from "react-router-dom";
+import { Navbar } from "./components/layout/navbar";
 
 export function App() {
   return (
     <>
-      <h1 className="bg-amber-200">ola</h1>
+      <Navbar isAuthenticated={true} />
+      <main>
+        <Outlet />
+        main
+      </main>
     </>
   );
 }
-
