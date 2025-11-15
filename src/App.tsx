@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { Navbar } from "./components/layout/navbar";
 
-export function App() {
+export const App = () => {
   return (
     <>
       <Navbar isAuthenticated={true} />
@@ -11,4 +11,4 @@ export function App() {
       </main>
     </>
   );
-}
+};

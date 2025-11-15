@@ -21,11 +21,7 @@ interface NavbarProps {
   onLogout?: () => void;
 }
 
-export function Navbar({
-  isAuthenticated,
-  user,
-  onLogout,
-}: NavbarProps) {
+export const Navbar = ({ isAuthenticated, user, onLogout }: NavbarProps) => {
   return (
     <header className="bg-white border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -38,7 +34,7 @@ export function Navbar({
             <span className="font-semibold text-lg">BarberShop API</span>
           </Link>
 
-          {/* links centrais (opcionais) */}
+          {/* links centrais */}
           <nav className="hidden md:flex items-center gap-4">
             <Link to="/services" className="text-sm hover:underline">
               Serviços
@@ -140,4 +136,4 @@ export function Navbar({
       </div>
     </header>
   );
-}
+};
