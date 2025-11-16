@@ -1,6 +1,7 @@
 import { App } from "@/App";
 import { ErrorComponent } from "@/components/layout/errorComponent";
 import { Login } from "@/pages/auth/login";
+import { Register } from "@/pages/auth/register";
 import { createBrowserRouter } from "react-router-dom";
 
 export const routes = createBrowserRouter([
@@ -12,6 +13,10 @@ export const routes = createBrowserRouter([
       {
         path: "/login",
         element: <Login />,
+      },
+      {
+        path: "/signup",
+        element: <Register />,
       },
     ],
   },

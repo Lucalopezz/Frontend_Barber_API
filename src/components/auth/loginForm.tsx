@@ -8,11 +8,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Link, LogIn } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginData } from "@/pages/auth/types/login.types";
+import { Link } from "react-router-dom";
 
 interface LoginProps {
   onSubmit: (data: LoginData) => Promise<void> | void;
@@ -23,15 +24,15 @@ export const LoginForm = ({ onSubmit, loading }: LoginProps) => {
   const form = useForm<LoginData>({
     defaultValues: {
       email: "",
-      password: ""
+      password: "",
     },
     resolver: zodResolver(loginSchema),
-  })
-  
-  async function handleSubmit(values: LoginData){
-    await onSubmit(values)
+  });
+
+  async function handleSubmit(values: LoginData) {
+    await onSubmit(values);
   }
-  
+
   return (
     <div className="max-w-md w-full mx-auto p-6 bg-white border rounded-lg shadow-sm">
       <h2 className="text-2xl font-semibold mb-4">Entrar na Barber</h2>
@@ -90,8 +91,8 @@ export const LoginForm = ({ onSubmit, loading }: LoginProps) => {
 
           <div className="text-sm text-center">
             Ainda não tem conta?{" "}
-            <Link href="/signup" className="font-medium hover:underline">
-              Criar conta
+            <Link to="/signup" className="font-medium hover:underline">
+              <strong>Criar conta</strong>
             </Link>
           </div>
         </form>
