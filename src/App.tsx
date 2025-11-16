@@ -4,10 +4,9 @@ import { Navbar } from "./components/layout/navbar";
 export const App = () => {
   return (
     <>
-      <Navbar isAuthenticated={true} />
+      <Navbar isAuthenticated={false} />
       <main>
         <Outlet />
-        main
       </main>
     </>
   );

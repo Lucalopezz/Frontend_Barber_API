@@ -9,7 +9,7 @@ import { routes } from "./routes/routes.tsx";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryProvider>
-      <RouterProvider router={routes} />,
+      <RouterProvider router={routes} />
     </QueryProvider>
   </StrictMode>,
 );
