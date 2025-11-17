@@ -1,11 +1,14 @@
 import { RegisterForm } from "@/components/auth/registerForm";
-import type { LoginData } from "./types/login.types";
 
-function teste(elements: LoginData) {
-  console.log(elements);
-  // need to be implemented
-}
+import type { RegisterData } from "./types/register.types";
+import { useUser } from "@/hooks/useUser";
 
 export const Register = () => {
-  return <RegisterForm loading={false} onSubmit={teste} />;
+  const { register: registerContext } = useUser();
+
+  function registerUser(elements: RegisterData) {
+    registerContext(elements);
+  }
+
+  return <RegisterForm loading={false} onSubmit={registerUser} />;
 };
