@@ -61,5 +61,12 @@ export function useAuth() {
     }
   }
 
-  return { authenticated, register, login, authUser };
+  function logout() {
+    setAuthenticated(false);
+    localStorage.removeItem("token");
+    api.defaults.headers.Authorization = "";
+    showToast("Logout realizado com sucesso!");
+  }
+
+  return { authenticated, register, login, logout };
 }
