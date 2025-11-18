@@ -2,7 +2,7 @@ import type { LoginData } from "@/pages/auth/types/login.types";
 import type { RegisterData } from "@/pages/auth/types/register.types";
 import api from "@/utils/api";
 import { showToast } from "@/utils/toast";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AxiosError } from "axios";
 
 type LoginToken = {
@@ -11,6 +11,14 @@ type LoginToken = {
 
 export function useAuth() {
   const [authenticated, setAuthenticated] = useState(false);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      api.defaults.headers.Authorization = `Bearer ${token}`;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setAuthenticated(true);
+    }
+  }, []);
 
   async function register(data: RegisterData) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
