@@ -5,7 +5,7 @@ import type { RegisterData } from "@/pages/auth/types/register.types";
 
 export interface UserContextType {
   authenticated: boolean;
-  register: (data: RegisterData) => void;
+  register: (data: RegisterData) => Promise<boolean>;
 }
 
 interface UserProviderProps {
