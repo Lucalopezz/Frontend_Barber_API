@@ -11,6 +11,7 @@ type LoginToken = {
 
 export function useAuth() {
   const [authenticated, setAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -18,6 +19,7 @@ export function useAuth() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setAuthenticated(true);
     }
+    setLoading(false);
   }, []);
 
   async function register(data: RegisterData) {
@@ -40,7 +42,7 @@ export function useAuth() {
 
   async function authUser(data: LoginToken) {
     setAuthenticated(true);
-    localStorage.setItem("token", JSON.stringify(data.accessToken));
+    localStorage.setItem("token", data.accessToken);
   }
 
   async function login(loginData: LoginData) {
@@ -68,5 +70,5 @@ export function useAuth() {
     showToast("Logout realizado com sucesso!");
   }
 
-  return { authenticated, register, login, logout };
+  return { authenticated, register, login, logout, loading };
 }
