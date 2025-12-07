@@ -5,6 +5,7 @@ import { Register } from "@/pages/auth/register";
 import { HomePage } from "@/pages/home/homePage";
 import { createBrowserRouter } from "react-router-dom";
 import { PrivateRoute } from "./PrivateRoute";
+import { Contact } from "@/pages/contact/contact";
 
 export const routes = createBrowserRouter([
   {
@@ -27,6 +28,10 @@ export const routes = createBrowserRouter([
       {
         path: "/signup",
         element: <Register />,
+      },
+      {
+        path: "/contact",
+        element: <Contact />,
       },
     ],
   },

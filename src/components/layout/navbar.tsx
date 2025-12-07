@@ -1,7 +1,7 @@
 import { Calendar, User, LogOut, LogIn, UserPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,18 +10,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Link } from "react-router-dom";
 
-interface UserInfo {
-  name?: string;
-  avatarUrl?: string;
-}
-
 interface NavbarProps {
   isAuthenticated: boolean;
-  user?: UserInfo;
   onLogout?: () => void;
 }
 
-export const Navbar = ({ isAuthenticated, user, onLogout }: NavbarProps) => {
+export const Navbar = ({ isAuthenticated, onLogout }: NavbarProps) => {
   return (
     <header className="bg-white border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -65,14 +59,9 @@ export const Navbar = ({ isAuthenticated, user, onLogout }: NavbarProps) => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="flex items-center gap-2">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={user?.avatarUrl} />
-                        <AvatarFallback>
-                          {user?.name?.[0] ?? <User size={14} />}
-                        </AvatarFallback>
+                        <AvatarFallback>{<User size={14} />}</AvatarFallback>
                       </Avatar>
-                      <span className="hidden md:inline text-sm">
-                        {user?.name ?? "Perfil"}
-                      </span>
+                      <span className="hidden md:inline text-sm">Perfil</span>
                     </Button>
                   </DropdownMenuTrigger>
 
