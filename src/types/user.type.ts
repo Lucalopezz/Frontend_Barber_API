@@ -6,4 +6,5 @@ export interface User {
   createdAt: string;
 }
 
-export type Role = "barber" | "client";
+export const ROLES = ["barber", "client"] as const;
+export type Role = (typeof ROLES)[number];

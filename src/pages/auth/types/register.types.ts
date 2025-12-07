@@ -1,4 +1,4 @@
-import { roles } from "@/pages/types/role.types";
+import { ROLES } from "@/types/user.type";
 import * as z from "zod";
 
 export const registerSchema = z
@@ -13,7 +13,7 @@ export const registerSchema = z
       .min(6, { message: "Senha muito curta" })
       .max(255),
     name: z.string().min(2, { message: "Nome muito curto" }).max(255),
-    role: z.enum(roles, {message: "Cargo inválida"}),
+    role: z.enum(ROLES, { message: "Cargo inválida" }),
   })
   .superRefine((values, ctx) => {
     if (values.password !== values.confirmPassword) {
