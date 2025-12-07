@@ -1,4 +1,5 @@
 import { UpdateUserForm } from "@/components/user/updateUserForm";
+import { UpdateUserPasswordForm } from "@/components/user/updateUserPassword";
 import { UserInfo } from "@/components/user/userInfo";
 import { useGetUser } from "@/hooks/queries/useGetUser";
 export const Profile = () => {
@@ -9,7 +10,7 @@ export const Profile = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="space-y-6">
           <UserInfo data={data} isLoading={isLoading} error={error} />
-          <p>editar senha</p>
+          <UpdateUserPasswordForm user={data} />
         </div>
 
         <div className="lg:col-span-1">
