@@ -7,6 +7,7 @@ import { createBrowserRouter } from "react-router-dom";
 import { PrivateRoute } from "./PrivateRoute";
 import { Contact } from "@/pages/contact/contact";
 import { Services } from "@/pages/services/services";
+import { Profile } from "@/pages/user/profile";
 
 export const routes = createBrowserRouter([
   {
@@ -19,6 +20,14 @@ export const routes = createBrowserRouter([
         element: (
           <PrivateRoute>
             <HomePage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "/profile",
+        element: (
+          <PrivateRoute>
+            <Profile />
           </PrivateRoute>
         ),
       },
