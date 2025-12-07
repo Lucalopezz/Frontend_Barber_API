@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Context } from "./UserContext";
+import { UserContext } from "./UserContext";
 import { useAuth } from "../hooks/useAuth";
 import type { RegisterData } from "@/pages/auth/types/register.types";
 import type { LoginData } from "@/pages/auth/types/login.types";
@@ -20,8 +20,10 @@ export function UserProvider({ children }: UserProviderProps) {
   const { authenticated, register, login, logout, loading } = useAuth();
 
   return (
-    <Context.Provider value={{ authenticated, register, login, logout, loading }}>
+    <UserContext.Provider
+      value={{ authenticated, register, login, logout, loading }}
+    >
       {children}
-    </Context.Provider>
+    </UserContext.Provider>
   );
 }

@@ -2,4 +2,6 @@ import { createContext } from "react";
 
 import type { UserContextType } from "./UserProvider";
 
-export const Context = createContext<UserContextType | undefined>(undefined);
+export const UserContext = createContext<UserContextType | undefined>(
+  undefined,
+);
