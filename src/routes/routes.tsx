@@ -6,6 +6,7 @@ import { HomePage } from "@/pages/home/homePage";
 import { createBrowserRouter } from "react-router-dom";
 import { PrivateRoute } from "./PrivateRoute";
 import { Contact } from "@/pages/contact/contact";
+import { Services } from "@/pages/services/services";
 
 export const routes = createBrowserRouter([
   {
@@ -32,6 +33,10 @@ export const routes = createBrowserRouter([
       {
         path: "/contact",
         element: <Contact />,
+      },
+      {
+        path: "/services",
+        element: <Services />,
       },
     ],
   },
