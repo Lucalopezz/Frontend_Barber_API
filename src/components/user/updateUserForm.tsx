@@ -20,7 +20,7 @@ import {
 } from "../ui/select";
 import { Button } from "../ui/button";
 import { Send } from "lucide-react";
-import { useUpdateUser } from "@/hooks/queries/useUpdateUser";
+import { useUpdateUser } from "@/hooks/queries/user/useUpdateUser";
 import { showToast } from "@/utils/toast";
 
 const updateUserSchema = z.object({

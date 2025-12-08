@@ -1,7 +1,8 @@
+import { ListUserAppointments } from "@/components/appointments/listUserAppointments";
 import { UpdateUserForm } from "@/components/user/updateUserForm";
 import { UpdateUserPasswordForm } from "@/components/user/updateUserPassword";
 import { UserInfo } from "@/components/user/userInfo";
-import { useGetUser } from "@/hooks/queries/useGetUser";
+import { useGetUser } from "@/hooks/queries/user/useGetUser";
 export const Profile = () => {
   const { data, isLoading, error } = useGetUser();
 
@@ -17,9 +18,10 @@ export const Profile = () => {
           <UpdateUserForm user={data} />
         </div>
 
-        {/* Ainda indefinido */}
+        {/* If user is a barber, show barber appoinments */}
+        {/* If user is a client, show client appoinments */}
         <div className="lg:col-span-1">
-          <p>lista de agendamentos</p>
+          <ListUserAppointments user={data} />
         </div>
       </div>
     </section>

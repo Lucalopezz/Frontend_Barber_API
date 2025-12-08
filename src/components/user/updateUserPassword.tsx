@@ -14,7 +14,7 @@ import { Button } from "../ui/button";
 import { Send } from "lucide-react";
 import type { User } from "@/types/user.type";
 import { showToast } from "@/utils/toast";
-import { useUpdateUserPassword } from "@/hooks/queries/useUpdateUserPassword";
+import { useUpdateUserPassword } from "@/hooks/queries/user/useUpdateUserPassword";
 
 const updateUserPasswordSchema = z.object({
   oldPassword: z.string().min(6, { message: "Senha muito curta" }).max(255),
