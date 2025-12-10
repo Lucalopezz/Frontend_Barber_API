@@ -1,8 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
-
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,6 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogDescription,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import type { BarberShop } from "@/types/barberShop.type";
 import { useDeleteBarberShop } from "@/hooks/queries/barberShops/useDeleteBarberShop";
@@ -27,10 +26,19 @@ export const ShopDangerZone = ({ shop }: { shop: BarberShop }) => {
 
       <CardContent className="space-y-4">
         <p className="text-sm text-gray-600">
-          Excluir a barbearia removerá todos os dados permanentemente.
+          Excluir a barbearia removerá todos os dados permanentemente, incluindo
+          informações de clientes, agendamentos e serviços e{" "}
+          <strong>O PERFIL DO DONO</strong>.
         </p>
 
         <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Excluir Barbearia
+            </Button>
+          </AlertDialogTrigger>
+
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
@@ -52,11 +60,6 @@ export const ShopDangerZone = ({ shop }: { shop: BarberShop }) => {
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
-
-          <Button variant="destructive" className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4" />
-            Excluir Barbearia
-          </Button>
         </AlertDialog>
       </CardContent>
     </Card>
