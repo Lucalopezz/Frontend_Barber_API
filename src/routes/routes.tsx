@@ -8,6 +8,7 @@ import { PrivateRoute } from "./PrivateRoute";
 import { Contact } from "@/pages/contact/contact";
 import { Services } from "@/pages/services/services";
 import { Profile } from "@/pages/user/profile";
+import { ShopManagementPage } from "@/pages/barberShop/manageShop";
 
 export const routes = createBrowserRouter([
   {
@@ -46,6 +47,10 @@ export const routes = createBrowserRouter([
       {
         path: "/services",
         element: <Services />,
+      },
+      {
+        path: "/barber-shop/:id",
+        element: <ShopManagementPage />,
       },
     ],
   },
