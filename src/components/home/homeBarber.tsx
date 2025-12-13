@@ -8,8 +8,19 @@ import { CalendarDays, Building2, Scissors } from "lucide-react";
 import type { User } from "@/types/user.type";
 import { useListBarberShops } from "@/hooks/queries/barberShops/useListBarbershops";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { useState } from "react";
+import type { CreateAndUpdateBarberShopType } from "../barberShop/ShopUpdateForm";
+import { CreateBarberShopDialog } from "./createShopDialog";
 
 export const HomeBarber = ({ user }: { user: User }) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleAddShop = (shop: CreateAndUpdateBarberShopType) => {
+    console.log(shop);
+
+    setIsDialogOpen(false);
+  };
+
   const navigate = useNavigate();
   const { data: shopsData, isLoading: shopsLoading } = useListBarberShops({
     perPage: 9999,
@@ -71,9 +82,12 @@ export const HomeBarber = ({ user }: { user: User }) => {
           <p className="text-gray-700 mb-3">
             Você ainda não possui uma barbearia cadastrada.
           </p>
-          <Button onClick={() => navigate("/create-barber-shop")}>
-            Criar Barbearia
-          </Button>
+          <CreateBarberShopDialog
+            open={isDialogOpen}
+            loading={false}
+            onSubmit={handleAddShop}
+            onOpenChange={setIsDialogOpen}
+          />
         </Card>
       )}
 

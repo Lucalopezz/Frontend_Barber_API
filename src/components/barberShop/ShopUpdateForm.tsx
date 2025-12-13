@@ -18,7 +18,7 @@ import type { BarberShop } from "@/types/barberShop.type";
 import { useUpdateBarberShop } from "@/hooks/queries/barberShops/useUpdateBarberShop";
 
 
-const formSchema = z.object({
+export const BarberShopSchema = z.object({
   name: z.string().min(3, "Nome muito curto"),
   address: z
     .string()
@@ -32,13 +32,13 @@ type ShopUpdateFormProps = {
   shop: BarberShop;
 };
 
-type formType = z.infer<typeof formSchema>;
+export type CreateAndUpdateBarberShopType = z.infer<typeof BarberShopSchema>;
 
 export const ShopUpdateForm = ({ shop }: ShopUpdateFormProps) => {
   const [editing, setEditing] = useState(false);
 
   const form = useForm({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(BarberShopSchema),
     defaultValues: {
       name: shop.name,
       address: shop.address,
@@ -47,7 +47,7 @@ export const ShopUpdateForm = ({ shop }: ShopUpdateFormProps) => {
 
   const updateMutation = useUpdateBarberShop(shop.id);
 
-  const onSubmit = (data: formType) => {
+  const onSubmit = (data: CreateAndUpdateBarberShopType) => {
     updateMutation.mutate(data, {
       onSuccess: () => setEditing(false),
     });
