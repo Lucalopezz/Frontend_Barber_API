@@ -17,13 +17,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { BarberShop } from "@/types/barberShop.type";
 import { useUpdateBarberShop } from "@/hooks/queries/barberShops/useUpdateBarberShop";
 
-
 export const BarberShopSchema = z.object({
   name: z.string().min(3, "Nome muito curto"),
   address: z
     .string()
     .regex(
-      /^(.+),\s*\d+,\s*.+\s*–\s*[A-Z]{2}$/,
+      /^.+,\s*\d+,\s*.+\s*[-–]\s*[A-Z]{2}$/,
       "Formato inválido. Ex: Rua das Flores, 133, São Paulo – SP",
     ),
 });

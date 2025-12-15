@@ -11,12 +11,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useState } from "react";
 import type { CreateAndUpdateBarberShopType } from "../barberShop/ShopUpdateForm";
 import { CreateBarberShopDialog } from "./createShopDialog";
+import { useCreateBarberShop } from "@/hooks/queries/barberShops/useCreateBarberShop";
+import { showToast } from "@/utils/toast";
 
 export const HomeBarber = ({ user }: { user: User }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  const { mutate: createShop, isPending } = useCreateBarberShop();
   const handleAddShop = (shop: CreateAndUpdateBarberShopType) => {
-    console.log(shop);
+    try {
+      createShop(shop);
+      showToast("Barbearia criada com sucesso!");
+    } catch (error) {
+      console.error(error);
+      showToast("Erro ao criar barbearia", "error");
+    }
 
     setIsDialogOpen(false);
   };
@@ -84,7 +93,7 @@ export const HomeBarber = ({ user }: { user: User }) => {
           </p>
           <CreateBarberShopDialog
             open={isDialogOpen}
-            loading={false}
+            loading={isPending}
             onSubmit={handleAddShop}
             onOpenChange={setIsDialogOpen}
           />
