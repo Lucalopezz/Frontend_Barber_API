@@ -17,9 +17,11 @@ export const useDeleteBarberShop = (shopId: string) => {
     },
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["barber-shop"] });
-      queryClient.invalidateQueries({ queryKey: ["barber-shops"] });
-      window.location.href = "/";
+      queryClient.invalidateQueries({
+        queryKey: ["barber-shop", "barber-shops", "user"],
+      });
+      localStorage.removeItem("token");
+      window.location.href = "/login";
     },
   });
 };
