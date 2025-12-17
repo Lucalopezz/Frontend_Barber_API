@@ -1,5 +1,6 @@
 import { ShopDangerZone } from "@/components/barberShop/ShopDangerZone";
 import { ShopInfoCard } from "@/components/barberShop/ShopInfoCard";
+import { ShopServices } from "@/components/barberShop/ShopServices";
 import { ShopUpdateForm } from "@/components/barberShop/ShopUpdateForm";
 import { useGetBarberShop } from "@/hooks/queries/barberShops/useGetBarberShop";
 import { useParams } from "react-router-dom";
@@ -18,6 +19,8 @@ export const ShopManagementPage = () => {
       <ShopInfoCard shop={data} />
 
       <ShopUpdateForm shop={data} />
+
+      <ShopServices />
 
       <ShopDangerZone shop={data} />
     </div>
