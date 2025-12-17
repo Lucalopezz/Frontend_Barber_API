@@ -9,6 +9,7 @@ import { Contact } from "@/pages/contact/contact";
 import { Services } from "@/pages/services/services";
 import { Profile } from "@/pages/user/profile";
 import { ShopManagementPage } from "@/pages/barberShop/manageShop";
+import { Appointments } from "@/pages/appointments/appointments";
 
 export const routes = createBrowserRouter([
   {
@@ -50,7 +51,19 @@ export const routes = createBrowserRouter([
       },
       {
         path: "/barber-shop/:id",
-        element: <ShopManagementPage />,
+        element: (
+          <PrivateRoute>
+            <ShopManagementPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "/appointments",
+        element: (
+          <PrivateRoute>
+            <Appointments />
+          </PrivateRoute>
+        ),
       },
     ],
   },
