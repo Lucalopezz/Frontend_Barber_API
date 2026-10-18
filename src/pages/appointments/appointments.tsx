@@ -17,7 +17,7 @@ export const Appointments = () => {
   });
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
+    <div className="page-section max-w-5xl mx-auto space-y-8">
       <AppointmentsHeader role={user?.role} />
 
       <AppointmentsList
@@ -29,7 +29,7 @@ export const Appointments = () => {
       {data && data.meta.lastPage > 1 && (
         <nav
           aria-label="Páginas de agendamentos"
-          className="flex gap-3 items-center"
+          className="flex flex-wrap gap-3 items-center"
         >
           <Button
             variant="outline"

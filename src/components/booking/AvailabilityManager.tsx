@@ -156,16 +156,15 @@ function AvailabilityEditor({
     );
   }
   return (
-    <section className="space-y-5 border rounded-xl p-4">
+    <section className="space-y-6 panel">
       <h2 className="text-xl font-semibold">Expediente e folgas</h2>
-      <p>
-        Expediente semanal no fuso {timezone}. Sem intervalos, a agenda fica
-        fechada. Você pode adicionar mais de um intervalo por dia.
+      <p className="text-sm text-muted-foreground">
+        Defina quando você atende. Dias sem intervalos ficam fechados. Horários
+        no fuso {timezone}.
       </p>
-      <p className="text-sm text-slate-600">
-        Alterações no expediente e novas folgas preservam as reservas
-        existentes. Elas afetam apenas a disponibilidade para novas reservas e
-        remarcações.
+      <p className="rounded-lg bg-secondary p-3 text-sm">
+        Alterar o expediente ou adicionar folgas não cancela reservas
+        existentes.
       </p>
       <form
         onSubmit={(e) => {
@@ -176,12 +175,15 @@ function AvailabilityEditor({
         aria-busy={mutation.isPending}
       >
         {schedules.map((s, i) => (
-          <div key={i} className="flex flex-wrap gap-3 items-end">
+          <div
+            key={i}
+            className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-3 items-end border-b pb-5"
+          >
             <label>
               Dia da semana {i + 1}
               <select
                 aria-label={`Dia da semana ${i + 1}`}
-                className="block border rounded p-2"
+                className="mt-1 block w-full"
                 disabled={mutation.isPending}
                 value={s.dayOfWeek}
                 onChange={(e) =>
@@ -198,7 +200,7 @@ function AvailabilityEditor({
             <label>
               Início expediente {i + 1}
               <input
-                className="block border rounded p-2"
+                className="mt-1 block w-full"
                 type="time"
                 required
                 disabled={mutation.isPending}
@@ -209,7 +211,7 @@ function AvailabilityEditor({
             <label>
               Fim expediente {i + 1}
               <input
-                className="block border rounded p-2"
+                className="mt-1 block w-full"
                 type="text"
                 inputMode="numeric"
                 pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]|24:00"
@@ -233,7 +235,7 @@ function AvailabilityEditor({
             </Button>
           </div>
         ))}
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <Button
             type="button"
             variant="outline"

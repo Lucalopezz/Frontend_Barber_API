@@ -31,7 +31,10 @@ async function login(page: Page, email = "a@example.test") {
   await page.getByPlaceholder("••••••••").fill("Password2026!");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page).toHaveURL(/\/$/);
-  await page.getByRole("link", { name: "Assistente", exact: true }).click();
+  await page.getByRole("button", { name: "Abrir menu da conta" }).click();
+  await page
+    .getByRole("menuitem", { name: "Assistente experimental", exact: true })
+    .click();
 }
 async function ask(page: Page, message = "Quais horários estão disponíveis?") {
   await page.getByLabel("Sua pergunta").fill(message);
@@ -97,6 +100,7 @@ test("assistant requires authentication and identifies its simulated read-only b
   await expect(
     page.getByText(/Não realiza agendamentos nem cancelamentos/),
   ).toBeVisible();
+  await page.getByText("Sobre este experimento", { exact: true }).click();
   await expect(
     page.getByText(/Cada pergunta usa somente o contexto selecionado/),
   ).toBeVisible();
@@ -146,7 +150,9 @@ test("pending prevents duplicate requests and errors preserve the question for r
     await expect(
       page.getByRole("button", { name: "Consultando…" }),
     ).toBeDisabled();
-    await page.getByLabel("Sua pergunta").press("Control+Enter");
+    // The textarea is disabled while pending: send the keyboard event at the
+    // current browser focus instead of waiting to focus a disabled control.
+    await page.keyboard.press("Control+Enter");
     expect(requests).toBe(1);
   } finally {
     held.resolve();
@@ -183,7 +189,9 @@ test("logout and another account do not retain history, context or a delayed old
   await ask(page, "Pergunta privada da conta A");
   await started.promise;
   try {
-    await page.getByRole("button", { name: "Perfil", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Abrir menu da conta", exact: true })
+      .click();
     await page.getByRole("menuitem", { name: "Sair", exact: true }).click();
     await login(page, "b@example.test");
   } finally {
@@ -307,7 +315,9 @@ test("catalog pagination clears hidden shop and service context in both directio
     [shopId, "Próximas barbearias", "Página 2"],
     [otherShopId, "Barbearias anteriores", "Página 1"],
   ]) {
-    await page.getByLabel("Barbearia", { exact: true }).selectOption(selectedShop);
+    await page
+      .getByLabel("Barbearia", { exact: true })
+      .selectOption(selectedShop);
     await page.getByLabel("Serviço", { exact: true }).selectOption(serviceId);
     await page.getByLabel("Data", { exact: true }).fill("2026-12-01");
     await page.getByLabel("Sua pergunta").fill("Quais horários?");
@@ -319,7 +329,9 @@ test("catalog pagination clears hidden shop and service context in both directio
     await expect(page.getByLabel("Data", { exact: true })).toHaveValue(
       "2026-12-01",
     );
-    await expect(page.getByLabel("Sua pergunta")).toHaveValue("Quais horários?");
+    await expect(page.getByLabel("Sua pergunta")).toHaveValue(
+      "Quais horários?",
+    );
     const request = page.waitForRequest("**/assistant/chat");
     await page.getByRole("button", { name: "Enviar pergunta" }).click();
     expect((await request).postDataJSON()).toEqual({

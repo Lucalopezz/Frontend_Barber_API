@@ -1,132 +1,118 @@
-import { Calendar, User, LogOut, LogIn, UserPlus } from "lucide-react";
-
+import {
+  CalendarDays,
+  UserRound,
+  LogOut,
+  Scissors,
+  Search,
+  FlaskConical,
+  CircleHelp,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 interface NavbarProps {
   isAuthenticated: boolean;
   onLogout?: () => void;
 }
-
-export const Navbar = ({ isAuthenticated, onLogout }: NavbarProps) => {
-  return (
-    <header className="bg-white border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
-          {/* brand */}
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold">
-              B
-            </div>
-            <span className="font-semibold text-lg">BarberShop API</span>
-          </Link>
-
-          {/* links centrais */}
-          <nav className="hidden md:flex items-center gap-4">
-            <Link to="/services" className="text-sm hover:underline">
-              Serviços
-            </Link>
-            <Link to="/contact" className="text-sm hover:underline">
-              Contato
-            </Link>
+export const Navbar = ({ isAuthenticated, onLogout }: NavbarProps) => (
+  <>
+    <header className="border-b bg-white">
+      <div className="app-shell flex h-20 items-center justify-between gap-3">
+        <Link
+          to="/"
+          aria-label="Barber, início"
+          className="flex shrink-0 items-center gap-2.5"
+        >
+          <span className="flex size-10 items-center justify-center rounded-lg bg-primary text-white">
+            <Scissors size={23} aria-hidden="true" />
+          </span>
+          <span className="font-['Barlow_Condensed'] text-3xl font-bold leading-none tracking-tight">
+            Barber<span className="text-[#883d43]">.</span>
+          </span>
+        </Link>
+        {isAuthenticated && (
+          <nav
+            aria-label="Navegação principal"
+            className="hidden md:flex items-center gap-2"
+          >
+            <NavLink className="site-nav-link" to="/" end>
+              <Search size={16} aria-hidden="true" />
+              Início
+            </NavLink>
+            <NavLink className="site-nav-link" to="/appointments">
+              <CalendarDays size={16} aria-hidden="true" />
+              Agendamentos
+            </NavLink>
           </nav>
-
-          {/* ações de autenticação */}
-          <div className="flex items-center gap-3">
-            {isAuthenticated ? (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  asChild
-                  className="hidden sm:flex items-center gap-2"
-                >
-                  <Link to="/appointments">
-                    <Calendar size={16} />
-                    Agendamentos
+        )}
+        <div className="flex items-center gap-2">
+          {!isAuthenticated ? (
+            <>
+              <Button asChild variant="ghost">
+                <Link to="/login">Entrar</Link>
+              </Button>
+              <Button asChild className="hidden sm:inline-flex">
+                <Link to="/signup">Criar conta</Link>
+              </Button>
+            </>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" aria-label="Abrir menu da conta">
+                  <UserRound size={17} aria-hidden="true" />
+                  <span className="hidden sm:inline">Minha conta</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60">
+                <DropdownMenuItem asChild>
+                  <Link to="/profile">Meu Perfil</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/services">
+                    <CircleHelp aria-hidden="true" />
+                    Como funciona
                   </Link>
-                </Button>
-
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/assistant">Assistente</Link>
-                </Button>
-
-                {/* avatar + dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center gap-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback>{<User size={14} />}</AvatarFallback>
-                      </Avatar>
-                      <span className="hidden md:inline text-sm">Perfil</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-
-                  <DropdownMenuContent align="end" className="w-40">
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile">Meu Perfil</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={onLogout}
-                      className="flex items-center gap-2"
-                    >
-                      <LogOut size={14} /> Sair
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hidden sm:flex items-center gap-2"
-                  asChild
-                >
-                  <Link to="/login">
-                    <LogIn size={16} /> Entrar
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/assistant">
+                    <FlaskConical aria-hidden="true" />
+                    Assistente experimental
                   </Link>
-                </Button>
-
-                <Button
-                  size="sm"
-                  className="hidden sm:flex items-center gap-2 bg-slate-900 text-white"
-                  asChild
-                >
-                  <Link to="/signup">
-                    <UserPlus size={16} /> Criar conta
-                  </Link>
-                </Button>
-
-                {/* mobile */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="sm:hidden">
-                      <User size={18} />
-                    </Button>
-                  </DropdownMenuTrigger>
-
-                  <DropdownMenuContent align="end" className="w-40">
-                    <DropdownMenuItem asChild>
-                      <Link to="/login">Entrar</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/signup">Criar conta</Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            )}
-          </div>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onLogout}>
+                  <LogOut size={16} aria-hidden="true" />
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
     </header>
-  );
-};
+    {isAuthenticated && (
+      <nav aria-label="Navegação no celular" className="mobile-dock">
+        <NavLink to="/" end>
+          <Search size={21} aria-hidden="true" />
+          Início
+        </NavLink>
+        <NavLink to="/appointments">
+          <CalendarDays size={21} aria-hidden="true" />
+          Agendamentos
+        </NavLink>
+        <NavLink to="/profile">
+          <UserRound size={21} aria-hidden="true" />
+          Minha conta
+        </NavLink>
+      </nav>
+    )}
+  </>
+);

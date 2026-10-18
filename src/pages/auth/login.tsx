@@ -1,3 +1,4 @@
+import { AuthLayout } from "@/components/layout/AuthLayout";
 import { LoginForm } from "@/components/auth/loginForm";
 import type { LoginData } from "./types/login.types";
 import { useUser } from "@/hooks/useUser";
@@ -22,5 +23,9 @@ export const Login = () => {
     }
   }
 
-  return <LoginForm sessionExpired={sessionExpired} onSubmit={loginUser} />;
+  return (
+    <AuthLayout>
+      <LoginForm sessionExpired={sessionExpired} onSubmit={loginUser} />
+    </AuthLayout>
+  );
 };

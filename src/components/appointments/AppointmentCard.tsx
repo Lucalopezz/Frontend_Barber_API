@@ -1,3 +1,4 @@
+import { appointmentStatus } from "@/utils/appointmentStatus";
 import { Calendar, Clock } from "lucide-react";
 import type { Appointment } from "@/types/appointment.type";
 import type { Role } from "@/types/user.type";
@@ -14,8 +15,8 @@ export const AppointmentCard = ({
   const date = new Date(appointment.date);
 
   return (
-    <div className="border rounded-xl p-4 bg-white space-y-2">
-      <div className="flex justify-between items-start">
+    <div className="border rounded-xl p-5 sm:p-6 bg-white space-y-5 min-w-0">
+      <div className="flex flex-wrap gap-3 justify-between items-start">
         <div>
           <p className="flex items-center gap-2 font-medium">
             <Calendar size={16} />
@@ -31,8 +32,8 @@ export const AppointmentCard = ({
           </p>
         </div>
 
-        <span className="text-xs px-2 py-1 rounded bg-muted">
-          {appointment.status}
+        <span className="status-badge">
+          {appointmentStatus(appointment.status)}
         </span>
       </div>
 

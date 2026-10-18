@@ -1,116 +1,149 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search } from "lucide-react";
+import { Search, MapPin, Scissors } from "lucide-react";
 import { useListBarberShops } from "@/hooks/queries/barberShops/useListBarbershops";
+import { BarberIllustration } from "@/components/layout/BarberIllustration";
 
 export const HomeClient = () => {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-
-  const { data, isLoading, isError } = useListBarberShops({
+  const { data, isLoading, isError, refetch } = useListBarberShops({
     page,
     perPage: 20,
-    filter: search.length > 0 ? search : undefined,
+    filter: search || undefined,
   });
-
   return (
-    <div className="w-full max-w-6xl mx-auto p-6 space-y-8">
-      {/* Header */}
-      <header className="space-y-2">
-        <h1 className="text-2xl font-semibold">Encontre uma Barbearia</h1>
-        <p className="text-muted-foreground">
-          Pesquise e agende um horário de forma rápida.
-        </p>
+    <div className="space-y-10">
+      <header className="grid items-center gap-6 md:grid-cols-[1.2fr_1fr] lg:gap-14">
+        <div className="py-2 md:py-6">
+          <h1 className="display-title max-w-xl">
+            Seu corte.
+            <br />
+            No seu tempo.
+          </h1>
+          <p className="mt-5 max-w-md text-muted-foreground">
+            Encontre sua barbearia e escolha o melhor horário para você.
+          </p>
+          <div className="relative mt-7 max-w-lg">
+            <Search
+              aria-hidden="true"
+              className="absolute left-4 top-4 size-5 text-muted-foreground"
+            />
+            <Input
+              aria-label="Buscar barbearia"
+              placeholder="Qual barbearia você procura?"
+              className="h-14 rounded-xl pl-12 pr-4 shadow-none"
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
+        </div>
+        <div className="relative hidden overflow-hidden rounded-[24px] bg-primary p-4 md:block">
+          <BarberIllustration className="w-full" />
+        </div>
       </header>
-
-      {/* Search */}
-      <div className="flex items-center gap-2">
-        <div className="relative w-full">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            aria-label="Buscar barbearia"
-            placeholder="Buscar por nome da barbearia..."
-            className="pl-8"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-          />
+      <section aria-labelledby="catalog-title" className="space-y-5">
+        <div className="flex flex-wrap items-end justify-between gap-2 border-b pb-4">
+          <h2 id="catalog-title" className="section-title">
+            {search ? "Resultado da busca" : "Encontre uma Barbearia"}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Escolha o lugar. O próximo passo é o horário.
+          </p>
         </div>
-      </div>
-
-      {isError && <p role="alert">Erro ao carregar barbearias.</p>}
-      {/* Lista */}
-      {isLoading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-36 rounded-xl" />
-          ))}
-        </div>
-      )}
-
-      {!isLoading && data?.data.length === 0 && (
-        <div className="text-center py-10 text-muted-foreground">
-          Nenhuma barbearia encontrada.
-        </div>
-      )}
-
-      {!isLoading && data && data.data.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {data.data.map((shop) => (
-            <Card
-              key={shop.id}
-              className="rounded-2xl border shadow-sm hover:shadow-md transition cursor-pointer"
-            >
-              <CardHeader>
-                <CardTitle className="text-lg">{shop.name}</CardTitle>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">{shop.address}</p>
-
+        {isError && (
+          <p role="alert">
+            Não foi possível carregar as barbearias.{" "}
+            <button className="underline" onClick={() => refetch()}>
+              Tentar novamente
+            </button>
+          </p>
+        )}
+        {isLoading && (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 3 }, (_, i) => (
+              <Skeleton key={i} className="h-52 rounded-xl" />
+            ))}
+          </div>
+        )}
+        {!isLoading && data?.data.length === 0 && (
+          <div className="panel py-12 text-center">
+            <Search
+              aria-hidden="true"
+              className="mx-auto mb-3 text-muted-foreground"
+            />
+            <h3 className="font-semibold">Nenhuma barbearia encontrada.</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {search
+                ? "Tente outro nome ou limpe a busca."
+                : "As barbearias aparecerão aqui assim que forem cadastradas."}
+            </p>
+          </div>
+        )}
+        {!isLoading && data && data.data.length > 0 && (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {data.data.map((shop) => (
+              <article
+                key={shop.id}
+                className="flex min-w-0 flex-col rounded-xl border bg-white p-6"
+              >
+                <div className="mb-5 flex items-center gap-3">
+                  <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-secondary">
+                    <Scissors aria-hidden="true" size={22} />
+                  </span>
+                  <h3 className="min-w-0 break-words text-lg font-bold">
+                    {shop.name}
+                  </h3>
+                </div>
+                <p className="mb-6 flex items-start gap-2 text-sm text-muted-foreground">
+                  <MapPin
+                    aria-hidden="true"
+                    className="mt-0.5 size-4 shrink-0"
+                  />
+                  <span className="break-words">{shop.address}</span>
+                </p>
                 <Button
-                  className="w-full"
-                  variant="default"
+                  className="mt-auto w-full"
                   onClick={() => navigate(`/book/${shop.id}`)}
                 >
                   Agendar
                 </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-      {data && data.meta.lastPage > 1 && (
-        <nav
-          aria-label="Páginas de barbearias"
-          className="flex gap-3 items-center"
-        >
-          <Button
-            variant="outline"
-            disabled={page <= 1 || isLoading}
-            onClick={() => setPage((p) => p - 1)}
+              </article>
+            ))}
+          </div>
+        )}
+        {data && data.meta.lastPage > 1 && (
+          <nav
+            aria-label="Páginas de barbearias"
+            className="flex flex-wrap items-center justify-center gap-3 pt-4"
           >
-            Anterior
-          </Button>
-          <span>
-            Página {page} de {data.meta.lastPage}
-          </span>
-          <Button
-            variant="outline"
-            disabled={page >= data.meta.lastPage || isLoading}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Próxima
-          </Button>
-        </nav>
-      )}
+            <Button
+              variant="outline"
+              disabled={page <= 1 || isLoading}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              Anterior
+            </Button>
+            <span className="text-sm">
+              Página {page} de {data.meta.lastPage}
+            </span>
+            <Button
+              variant="outline"
+              disabled={page >= data.meta.lastPage || isLoading}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Próxima
+            </Button>
+          </nav>
+        )}
+      </section>
     </div>
   );
 };

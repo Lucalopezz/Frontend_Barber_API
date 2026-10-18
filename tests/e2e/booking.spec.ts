@@ -14,7 +14,11 @@ const service = {
   barberShopId: shop.id,
 };
 const slot = "2030-10-21T12:00:00.000Z";
-async function setup(page: Page, role = "client", now = "2030-10-15T12:00:00.000Z") {
+async function setup(
+  page: Page,
+  role = "client",
+  now = "2030-10-15T12:00:00.000Z",
+) {
   await page.clock.setFixedTime(new Date(now));
   const requests: { method: string; path: string; body: unknown }[] = [];
   let status = "scheduled";
@@ -104,7 +108,7 @@ test("cliente encontra loja, reserva horário UTC e acompanha/cancela sem editar
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Cancelar", exact: true }).click();
   await page.getByRole("button", { name: "Confirmar cancelamento" }).click();
-  await expect(page.getByText("cancelled", { exact: true })).toBeVisible();
+  await expect(page.getByText("Cancelado", { exact: true })).toBeVisible();
 });
 test("conflito 409 atualiza horários e não anuncia sucesso", async ({
   page,
@@ -128,7 +132,7 @@ test("dono usa contexto próprio e configura expediente e folga", async ({
 }) => {
   const requests = await setup(page, "owner");
   await page.goto("/");
-  await page.getByRole("button", { name: "Gerenciar Barbearia" }).click();
+  await page.getByRole("link", { name: "Gerenciar Barbearia" }).click();
   await page.getByRole("button", { name: "Salvar expediente" }).click();
   await expect(page.getByRole("status")).toContainText("Expediente salvo");
   await page.getByLabel("Início da folga").fill("2030-10-22T09:00");
@@ -207,7 +211,7 @@ test("cliente não acessa gestão e cancelamento falho continua visível", async
   await page.getByRole("button", { name: "Cancelar", exact: true }).click();
   await page.getByRole("button", { name: "Confirmar cancelamento" }).click();
   await expect(page.getByRole("alert")).toContainText("Erro ao cancelar");
-  await expect(page.getByText("scheduled", { exact: true })).toBeVisible();
+  await expect(page.getByText("Agendado", { exact: true })).toBeVisible();
 });
 test("dono remarca com slot retornado pela API e conclui atendimento", async ({
   page,
@@ -224,7 +228,7 @@ test("dono remarca com slot retornado pela API e conclui atendimento", async ({
     )?.body,
   ).toEqual({ serviceId: service.id, date: slot });
   await page.getByRole("button", { name: "Concluir", exact: true }).click();
-  await expect(page.getByText("completed", { exact: true })).toBeVisible();
+  await expect(page.getByText("Concluído", { exact: true })).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Concluir", exact: true }),
   ).toHaveCount(0);
@@ -307,7 +311,7 @@ test("listas paginadas permitem encontrar loja e agendamentos fora da primeira p
   });
   await page.goto("/appointments");
   await page.getByRole("button", { name: "Próxima", exact: true }).click();
-  await expect(page.getByText("completed", { exact: true })).toBeVisible();
+  await expect(page.getByText("Concluído", { exact: true })).toBeVisible();
 });
 
 test("serviço da segunda página aparece na seleção sem depender da primeira página", async ({
@@ -400,7 +404,7 @@ test("barbeiro vinculado configura disponibilidade própria sem acesso à gestã
   );
   await page.goto("/");
   await expect(
-    page.getByRole("button", { name: "Gerenciar Barbearia" }),
+    page.getByRole("link", { name: "Gerenciar Barbearia" }),
   ).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Expediente e folgas" }),
@@ -449,7 +453,7 @@ for (const scenario of [
       await page
         .getByRole("button", { name: "Confirmar cancelamento" })
         .click();
-      await expect(page.getByText("cancelled", { exact: true })).toBeVisible();
+      await expect(page.getByText("Cancelado", { exact: true })).toBeVisible();
     } else {
       await expect(cancel).toBeDisabled();
       await expect(

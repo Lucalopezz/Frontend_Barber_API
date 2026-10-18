@@ -1,3 +1,4 @@
+import { appointmentStatus } from "@/utils/appointmentStatus";
 import type { User } from "@/types/user.type";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Clock, UserCircle2 } from "lucide-react";
@@ -47,8 +48,8 @@ export const ListUserAppointments = ({ user }: { user: User | undefined }) => {
   });
 
   return (
-    <div className="  bg-slate-50 shadow-lg rounded-xl p-6">
-      <h2 className="text-2xl font-semibold mb-4">Seus Agendamentos</h2>
+    <div className="panel">
+      <h2 className="text-lg font-semibold mb-4">Seus Agendamentos</h2>
 
       {appointments.length === 0 && (
         <p className="text-gray-600 text-sm">
@@ -98,7 +99,7 @@ export const ListUserAppointments = ({ user }: { user: User | undefined }) => {
 
               <p className="text-gray-700 flex items-center gap-2 mt-1">
                 <UserCircle2 size={16} />
-                {(user?.role === "barber" || user?.role === "owner")
+                {user?.role === "barber" || user?.role === "owner"
                   ? "Atendimento da barbearia"
                   : "Seu agendamento"}
               </p>
@@ -114,7 +115,7 @@ export const ListUserAppointments = ({ user }: { user: User | undefined }) => {
                         : "#fee2e2",
                 }}
               >
-                Status: {appt.status}
+                {appointmentStatus(appt.status)}
               </p>
             </div>
           );

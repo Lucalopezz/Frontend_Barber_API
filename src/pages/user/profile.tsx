@@ -7,8 +7,9 @@ export const Profile = () => {
   const { data, isLoading, error } = useGetUser();
 
   return (
-    <section className="container mx-auto px-4 pt-16">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <section className="page-section">
+      <h1 className="page-title mb-8">Minha conta</h1>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="space-y-6">
           <UserInfo data={data} isLoading={isLoading} error={error} />
           <UpdateUserPasswordForm user={data} />

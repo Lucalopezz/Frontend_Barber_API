@@ -1,15 +1,23 @@
 import { HomeBarber } from "@/components/home/homeBarber";
 import { HomeClient } from "@/components/home/homeClient";
 import { useGetUser } from "@/hooks/queries/user/useGetUser";
-
 export const HomePage = () => {
-  const { data: userData } = useGetUser();
+  const { data: userData, isLoading, isError, refetch } = useGetUser();
   return (
-    <section className="container mx-auto px-4 pt-16">
-      <div className="flex justify-center">
-        {userData?.role === "client" && <HomeClient />}
-        {(userData?.role === "barber" || userData?.role === "owner") && <HomeBarber user={userData} />}
-      </div>
+    <section className="page-section">
+      {isLoading && <p role="status">Preparando seu espaço…</p>}
+      {isError && (
+        <p role="alert">
+          Não foi possível carregar sua conta.{" "}
+          <button className="underline" onClick={() => refetch()}>
+            Tentar novamente
+          </button>
+        </p>
+      )}
+      {userData?.role === "client" && <HomeClient />}
+      {(userData?.role === "barber" || userData?.role === "owner") && (
+        <HomeBarber user={userData} />
+      )}
     </section>
   );
 };

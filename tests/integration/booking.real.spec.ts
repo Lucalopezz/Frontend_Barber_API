@@ -162,8 +162,11 @@ test("owner configures availability and clients book/cancel with real API, datab
       .click();
     await ownerPage.getByPlaceholder("Nome da loja").fill(shopName);
     await ownerPage
-      .getByPlaceholder("Rua, número, cidade – estado")
-      .fill("Rua Integração, 123, Sao Paulo - SP");
+      .getByLabel("Logradouro", { exact: true })
+      .fill("Rua Integração");
+    await ownerPage.getByLabel("Número", { exact: true }).fill("123");
+    await ownerPage.getByLabel("Cidade", { exact: true }).fill("Sao Paulo");
+    await ownerPage.getByLabel("Estado (UF)", { exact: true }).fill("SP");
     const shopResponse = ownerPage.waitForResponse(
       responseFor("POST", "/barber-shops"),
     );
@@ -175,7 +178,7 @@ test("owner configures availability and clients book/cancel with real API, datab
     expect(shopResult.status()).toBe(201);
     const shopId = (await shopResult.json()).data.id as string;
     await ownerPage
-      .getByRole("button", { name: "Gerenciar Barbearia", exact: true })
+      .getByRole("link", { name: "Gerenciar Barbearia", exact: true })
       .click();
 
     await ownerPage
@@ -215,9 +218,9 @@ test("owner configures availability and clients book/cancel with real API, datab
     await ownerPage
       .getByRole("button", { name: "Salvar expediente", exact: true })
       .click();
-    await expect(ownerPage.getByRole("status")).toContainText(
-      "Expediente salvo.",
-    );
+    await expect(
+      ownerPage.locator("#shop-hours").getByRole("status"),
+    ).toContainText("Expediente salvo.");
 
     await ownerPage
       .getByLabel("Início da folga", { exact: true })
@@ -258,9 +261,9 @@ test("owner configures availability and clients book/cancel with real API, datab
       clientPage.getByRole("button", { name: "09:00", exact: true }),
     ).toHaveCount(0);
     await ownerPage.getByRole("button", { name: /^Remover folga / }).click();
-    await expect(ownerPage.getByRole("status")).toContainText(
-      "Folga removida.",
-    );
+    await expect(
+      ownerPage.locator("#shop-hours").getByRole("status"),
+    ).toContainText("Folga removida.");
 
     await chooseSlot(clientPage, shopId, serviceId, "09:00");
     const otherLogin = await request.post(`${api}/users/login`, {
@@ -327,7 +330,7 @@ test("owner configures availability and clients book/cancel with real API, datab
       .click();
     expect((await cancelResponse).status()).toBe(200);
     await expect(
-      clientPage.getByText("cancelled", { exact: true }),
+      clientPage.getByText("Cancelado", { exact: true }),
     ).toBeVisible();
     await expect(
       clientPage.getByRole("button", { name: "Cancelar", exact: true }),
@@ -356,7 +359,7 @@ test("owner configures availability and clients book/cancel with real API, datab
       .click();
     expect((await complete).status()).toBe(200);
     await expect(
-      ownerPage.getByText("completed", { exact: true }),
+      ownerPage.getByText("Concluído", { exact: true }),
     ).toBeVisible();
     await expect(
       ownerPage.getByRole("button", { name: "Concluir", exact: true }),

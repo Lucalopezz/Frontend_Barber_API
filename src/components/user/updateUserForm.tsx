@@ -44,8 +44,8 @@ export const UpdateUserForm = ({ user }: { user: User | undefined }) => {
   }
 
   return (
-    <div className="w-full max-w-md bg-slate-50 shadow-lg rounded-xl p-6">
-      <h2 className="text-2xl font-semibold mb-4">Atualizar seus dados:</h2>
+    <div className="panel w-full">
+      <h2 className="text-lg font-semibold mb-4">Seus dados</h2>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -59,7 +59,7 @@ export const UpdateUserForm = ({ user }: { user: User | undefined }) => {
                   <Input
                     placeholder="Digite seu nome"
                     {...field}
-                    autoComplete="Seu nome"
+                    autoComplete="name"
                   />
                 </FormControl>
                 <FormMessage />

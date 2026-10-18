@@ -1,3 +1,4 @@
+import { AuthLayout } from "@/components/layout/AuthLayout";
 import { RegisterForm } from "@/components/auth/registerForm";
 
 import type { RegisterData } from "./types/register.types";
@@ -15,5 +16,9 @@ export const Register = () => {
     }
   }
 
-  return <RegisterForm loading={false} onSubmit={registerUser} />;
+  return (
+    <AuthLayout>
+      <RegisterForm loading={false} onSubmit={registerUser} />
+    </AuthLayout>
+  );
 };

@@ -15,7 +15,7 @@ export const UserInfo = ({ data, isLoading, error }: UserInfoProps) => {
 
   if (isLoading) {
     return (
-      <div className="w-full max-w-md bg-white shadow rounded-lg p-6 space-y-4">
+      <div className="panel w-full space-y-4">
         <Skeleton className="h-6 w-32 mx-auto" />
         <div className="flex flex-col items-center gap-4 mt-4">
           <Skeleton className="h-16 w-16 rounded-full" />
@@ -37,16 +37,16 @@ export const UserInfo = ({ data, isLoading, error }: UserInfoProps) => {
     return null;
   }
   return (
-    <div className="w-full max-w-md bg-slate-50 shadow-lg rounded-xl p-6">
-      <h1 className="text-2xl font-semibold text-center mb-6">Seu Perfil</h1>
+    <div className="panel w-full">
+      <h2 className="text-lg font-semibold mb-6">Seu Perfil</h2>
 
       {/* Avatar simples */}
       <div className="flex flex-col items-center mb-6">
         <div className="h-20 w-20 flex items-center justify-center rounded-full bg-slate-200">
           <User size={40} />
         </div>
-        <p className="mt-3 text-lg font-medium">{data.name}</p>
-        <p className="text-gray-600 text-sm">{data.email}</p>
+        <p className="mt-3 break-words text-lg font-medium">{data.name}</p>
+        <p className="text-muted-foreground text-sm break-all">{data.email}</p>
       </div>
 
       <div className="space-y-4">
@@ -55,7 +55,11 @@ export const UserInfo = ({ data, isLoading, error }: UserInfoProps) => {
           <BadgeCheck size={18} className="text-slate-700" />
           <p className="text-gray-700 text-sm">
             <span className="font-semibold">Tipo de conta:</span>{" "}
-            {data.role === "owner" ? "Proprietário" : data.role === "barber" ? "Barbeiro" : "Cliente"}
+            {data.role === "owner"
+              ? "Proprietário"
+              : data.role === "barber"
+                ? "Barbeiro"
+                : "Cliente"}
           </p>
         </div>
 

@@ -48,8 +48,8 @@ export const UpdateUserPasswordForm = ({
   }
 
   return (
-    <div className="w-full max-w-md bg-slate-50 shadow-lg rounded-xl p-6">
-      <h2 className="text-2xl font-semibold mb-4">Atualizar sua senha:</h2>
+    <div className="panel w-full">
+      <h2 className="text-lg font-semibold mb-4">Atualizar sua senha:</h2>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">

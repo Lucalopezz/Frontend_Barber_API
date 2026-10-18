@@ -35,8 +35,11 @@ export const LoginForm = ({ onSubmit, sessionExpired }: LoginProps) => {
   }
 
   return (
-    <div className="max-w-md w-full mx-auto p-6 bg-white border rounded-lg shadow-sm">
-      <h1 className="text-2xl font-semibold mb-4">Entrar na Barber</h1>
+    <div className="w-full">
+      <h1 className="page-title mb-3">Entrar na Barber</h1>
+      <p className="mb-8 text-sm text-muted-foreground">
+        Acesse sua conta para cuidar dos seus horários.
+      </p>
 
       {sessionExpired && (
         <p role="alert" className="mb-4 text-sm text-destructive">
@@ -92,12 +95,12 @@ export const LoginForm = ({ onSubmit, sessionExpired }: LoginProps) => {
             )}
           />
 
-          <div className="flex items-center justify-between">
-            <div>
+          <div>
+            <div className="w-full">
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center gap-2"
+                className="inline-flex w-full items-center gap-2"
               >
                 {isSubmitting ? (
                   <LoaderCircle

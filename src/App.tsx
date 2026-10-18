@@ -7,13 +7,23 @@ import { Footer } from "./components/layout/footer";
 export const App = () => {
   const { authenticated, logout } = useUser();
   return (
-    <>
+    <div className="flex min-h-dvh flex-col">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-white focus:p-3"
+      >
+        Pular para o conteúdo
+      </a>
       <Navbar isAuthenticated={authenticated} onLogout={logout} />
-      <main className="min-h-screen container mx-auto">
-        <ToastContainer />
+      <main
+        id="main-content"
+        className="app-shell flex-1 min-w-0 pb-6"
+        tabIndex={-1}
+      >
+        <ToastContainer position="top-right" />
         <Outlet />
       </main>
       <Footer />
-    </>
+    </div>
   );
 };

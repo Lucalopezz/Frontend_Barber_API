@@ -54,19 +54,12 @@ export function BookingForm({
     }
   }
   return (
-    <form
-      onSubmit={submit}
-      aria-busy={pending}
-      className="space-y-4 border rounded-xl p-4"
-    >
+    <form onSubmit={submit} aria-busy={pending} className="space-y-6 panel">
       <h2 className="text-xl font-semibold">
         {appointmentId ? "Remarcar agendamento" : "Escolha serviço e horário"}
       </h2>
-      <p className="text-sm text-slate-600">
-        Reservas e remarcações exigem pelo menos 30 minutos de antecedência, com
-        limite de 60 dias. Os horários de início seguem uma grade de 30 minutos
-        no fuso da barbearia. Clientes podem cancelar até 24 horas antes do
-        início.
+      <p className="text-sm text-muted-foreground">
+        Escolha o serviço e a data para ver os horários disponíveis.
       </p>
       {services.isLoading && <p>Carregando serviços…</p>}
       {services.isError && (
@@ -84,7 +77,7 @@ export function BookingForm({
         Serviço
         <select
           aria-label="Serviço"
-          className="block border rounded p-2 w-full"
+          className="mt-2 block w-full"
           required
           disabled={pending}
           value={serviceId}
@@ -110,7 +103,7 @@ export function BookingForm({
       <label className="block">
         Data
         <input
-          className="block border rounded p-2"
+          className="mt-2 block w-full"
           type="date"
           required
           value={date}
@@ -122,7 +115,11 @@ export function BookingForm({
           }}
         />
       </label>
-      {slots.data && <p>Horários no fuso {slots.data.timezone}.</p>}
+      {slots.data && (
+        <p className="text-sm text-muted-foreground">
+          Horários no fuso {slots.data.timezone}.
+        </p>
+      )}
       {slots.isFetching && <p>Consultando horários…</p>}
       {slots.isError && (
         <p role="alert">
@@ -157,7 +154,18 @@ export function BookingForm({
             </Button>
           ))}
       </div>
-      <Button disabled={pending || !slot || slots.isFetching} type="submit">
+      <details className="text-sm text-muted-foreground">
+        <summary>Prazo de reserva e cancelamento</summary>
+        <p className="mt-2">
+          Agende entre 30 minutos e 60 dias de antecedência, nos horários
+          oferecidos. Você pode cancelar até 24 horas antes do atendimento.
+        </p>
+      </details>
+      <Button
+        className="w-full sm:w-auto"
+        disabled={pending || !slot || slots.isFetching}
+        type="submit"
+      >
         {pending
           ? "Salvando…"
           : appointmentId

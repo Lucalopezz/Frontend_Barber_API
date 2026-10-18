@@ -1,25 +1,20 @@
 import { AvailabilityManager } from "@/components/booking/AvailabilityManager";
-import { useNavigate } from "react-router-dom";
-
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-
 import { useListAppointments } from "@/hooks/queries/appointments/useListAppointments";
-import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarDays, Building2, Scissors } from "lucide-react";
+import { CalendarDays, MapPin, Scissors } from "lucide-react";
 import type { User } from "@/types/user.type";
-
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useState } from "react";
 import type { CreateAndUpdateBarberShopType } from "../barberShop/ShopUpdateForm";
 import { CreateBarberShopDialog } from "./createShopDialog";
 import { useCreateBarberShop } from "@/hooks/queries/barberShops/useCreateBarberShop";
 import { showToast } from "@/utils/toast";
+import { appointmentStatus } from "@/utils/appointmentStatus";
 
 export const HomeBarber = ({ user }: { user: User }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
   const { mutate: createShop, isPending } = useCreateBarberShop();
-  const handleAddShop = (shop: CreateAndUpdateBarberShopType) => {
+  const handleAddShop = (shop: CreateAndUpdateBarberShopType) =>
     createShop(shop, {
       onSuccess: () => {
         showToast("Barbearia criada com sucesso!");
@@ -27,137 +22,131 @@ export const HomeBarber = ({ user }: { user: User }) => {
       },
       onError: () => showToast("Erro ao criar barbearia", "error"),
     });
-  };
-
-  const navigate = useNavigate();
-  const { data: apptData, isLoading: apptLoading } = useListAppointments({
+  const { data, isLoading, isError, refetch } = useListAppointments({
     perPage: 7,
     sort: "date",
     sortDir: "asc",
   });
-
-  const appointmentsData = apptData?.data ?? [];
-
-  const appointments = appointmentsData.filter((appointment) => {
-    const dateObj = new Date(appointment.date);
-    const today = new Date();
-    return dateObj >= today;
-  });
-
+  const appointments = data?.data ?? [];
   const myShop = user.barberShop;
-
-  if (apptLoading) {
-    return (
-      <div className="space-y-6 mt-6">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-40 w-full" />
-      </div>
-    );
-  }
-
   return (
-    <div className="p-4 space-y-6">
-      <h1 className="text-2xl font-semibold">Dashboard do Barbeiro</h1>
-
-      {myShop ? (
-        <Card className="bg-white shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 size={20} />
-              Sua Barbearia
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="font-medium text-lg">{myShop.name}</p>
-            <p className="text-gray-600">{myShop.address}</p>
-
-            {myShop.relationship === "owner" && (
-              <Button
-                className="mt-4"
-                onClick={() => navigate(`/barber-shop/${myShop.id}`)}
-              >
-                Gerenciar Barbearia
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="bg-white p-4 shadow-sm">
-          <p className="text-gray-700 mb-3">
-            Você ainda não possui uma barbearia cadastrada.
+    <div className="space-y-8">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="mb-2 text-muted-foreground">
+            Olá, {user.name.split(" ")[0]}.
           </p>
-          <CreateBarberShopDialog
-            open={isDialogOpen}
-            loading={isPending}
-            onSubmit={handleAddShop}
-            onOpenChange={setIsDialogOpen}
-          />
-        </Card>
-      )}
-
-      {myShop?.relationship === "barber" && <AvailabilityManager />}
-
-      <Card className="bg-white shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CalendarDays size={20} />
-            Próximos Agendamentos
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent className="space-y-3">
-          {appointments.length === 0 && (
-            <p className="text-gray-600 text-sm">
-              Nenhum agendamento futuro encontrado.
+          <h1 className="page-title">Seu salão, em dia.</h1>
+        </div>
+        <Button asChild>
+          <Link to="/appointments">
+            <CalendarDays aria-hidden="true" size={18} />
+            Ver agendamentos
+          </Link>
+        </Button>
+      </header>
+      <div className="grid gap-6 lg:grid-cols-[1fr_1.25fr]">
+        <section className="rounded-2xl bg-primary p-7 text-white sm:p-9">
+          <Scissors aria-hidden="true" className="mb-7 size-9 text-[#c3a78a]" />
+          {myShop ? (
+            <>
+              <p className="text-sm text-white/70">Sua barbearia</p>
+              <h2 className="mt-2 break-words font-['Barlow_Condensed'] text-4xl font-bold">
+                {myShop.name}
+              </h2>
+              <p className="mt-4 flex items-start gap-2 text-sm text-white/75">
+                <MapPin
+                  aria-hidden="true"
+                  size={17}
+                  className="mt-1 shrink-0"
+                />
+                {myShop.address}
+              </p>
+              {myShop.relationship === "owner" && (
+                <Button asChild variant="secondary" className="mt-8">
+                  <Link to={`/barber-shop/${myShop.id}`}>
+                    Gerenciar Barbearia
+                  </Link>
+                </Button>
+              )}
+            </>
+          ) : (
+            <>
+              <h2 className="font-['Barlow_Condensed'] text-4xl font-bold">
+                Dê um lugar à sua agenda.
+              </h2>
+              <p className="mb-7 mt-4 text-sm text-white/75">
+                Cadastre sua barbearia para adicionar serviços e receber
+                agendamentos.
+              </p>
+              <CreateBarberShopDialog
+                open={isDialogOpen}
+                loading={isPending}
+                onSubmit={handleAddShop}
+                onOpenChange={setIsDialogOpen}
+              />
+            </>
+          )}
+        </section>
+        <section className="panel">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <h2 className="section-title">Na sua agenda</h2>
+            <CalendarDays
+              aria-hidden="true"
+              className="size-5 text-muted-foreground"
+            />
+          </div>
+          {isLoading && <p role="status">Carregando atendimentos…</p>}
+          {isError && (
+            <p role="alert">
+              Não foi possível carregar a agenda.{" "}
+              <button className="underline" onClick={() => refetch()}>
+                Tentar novamente
+              </button>
             </p>
           )}
-
-          {appointments.map((appt) => {
-            const d = new Date(appt.date);
-            const dateStr = d.toLocaleDateString("pt-BR");
-            const timeStr = d.toLocaleTimeString("pt-BR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            });
-
-            return (
+          {!isLoading && !isError && appointments.length === 0 && (
+            <p className="py-8 text-sm text-muted-foreground">
+              Nenhum agendamento encontrado. Os próximos atendimentos aparecerão
+              aqui.
+            </p>
+          )}
+          <div className="divide-y">
+            {appointments.map((appt) => (
               <div
                 key={appt.id}
-                className="border rounded-lg p-3 bg-gray-50 flex items-center justify-between"
+                className="flex flex-wrap items-center justify-between gap-3 py-4"
               >
                 <div>
-                  <p className="font-medium">{dateStr}</p>
-                  <p className="text-sm text-gray-600">{timeStr}</p>
+                  <p className="font-semibold">
+                    {new Intl.DateTimeFormat("pt-BR", {
+                      dateStyle: "medium",
+                    }).format(new Date(appt.date))}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {new Intl.DateTimeFormat("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }).format(new Date(appt.date))}
+                  </p>
                 </div>
-
-                <span className="text-sm px-2 py-1 bg-blue-100 rounded-md">
-                  {appt.status}
+                <span className="status-badge">
+                  {appointmentStatus(appt.status)}
                 </span>
               </div>
-            );
-          })}
-        </CardContent>
-      </Card>
-
-      <Card className="bg-white shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Scissors size={20} />
-            Resumo
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex gap-6 text-center">
-          <div>
-            <p className="text-2xl font-bold">{appointments.length}</p>
-            <p className="text-gray-600 text-sm">Agendamentos Futuros</p>
+            ))}
           </div>
-          <div>
-            <p className="text-2xl font-bold">{appointmentsData.length}</p>
-            <p className="text-gray-600 text-sm">Todos os Agendamentos</p>
-          </div>
-        </CardContent>
-      </Card>
+          {(data?.meta.lastPage ?? 1) > 1 && (
+            <Link
+              to="/appointments"
+              className="mt-4 inline-block text-sm font-semibold underline"
+            >
+              Ver todos os agendamentos
+            </Link>
+          )}
+        </section>
+      </div>
+      {myShop?.relationship === "barber" && <AvailabilityManager />}
     </div>
   );
 };

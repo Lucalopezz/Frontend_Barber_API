@@ -4,10 +4,10 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { LogIn } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,7 +15,13 @@ import {
   registerSchema,
   type RegisterData,
 } from "@/pages/auth/types/register.types";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { Link } from "react-router-dom";
 
 interface RegisterProps {
@@ -40,8 +46,8 @@ export const RegisterForm = ({ onSubmit, loading }: RegisterProps) => {
   }
 
   return (
-    <div className="max-w-md w-full mx-auto p-6 bg-white border rounded-lg shadow-sm">
-      <h2 className="text-2xl font-semibold mb-4">Criar uma conta na Barber</h2>
+    <div className="w-full">
+      <h1 className="page-title mb-8">Crie sua conta.</h1>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -50,12 +56,12 @@ export const RegisterForm = ({ onSubmit, loading }: RegisterProps) => {
             name="name"
             render={({ field }) => (
               <FormItem>
-                <Label className="text-sm">Nome</Label>
+                <FormLabel className="text-sm">Nome</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="Digite seu nome"
                     {...field}
-                    autoComplete="Seu nome"
+                    autoComplete="name"
                   />
                 </FormControl>
                 <FormMessage />
@@ -67,7 +73,7 @@ export const RegisterForm = ({ onSubmit, loading }: RegisterProps) => {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <Label className="text-sm">E‑mail</Label>
+                <FormLabel className="text-sm">E‑mail</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="seu@exemplo.com"
@@ -85,13 +91,13 @@ export const RegisterForm = ({ onSubmit, loading }: RegisterProps) => {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <Label className="text-sm">Senha</Label>
+                <FormLabel className="text-sm">Senha</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="••••••••"
                     type="password"
                     {...field}
-                    autoComplete="current-password"
+                    autoComplete="new-password"
                   />
                 </FormControl>
                 <FormMessage />
@@ -103,13 +109,13 @@ export const RegisterForm = ({ onSubmit, loading }: RegisterProps) => {
             name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <Label className="text-sm">Senha</Label>
+                <FormLabel className="text-sm">Confirmar senha</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="••••••••"
                     type="password"
                     {...field}
-                    autoComplete="confirm-password"
+                    autoComplete="new-password"
                   />
                 </FormControl>
                 <FormMessage />
@@ -121,7 +127,9 @@ export const RegisterForm = ({ onSubmit, loading }: RegisterProps) => {
             name="role"
             render={({ field }) => (
               <FormItem>
-                <Label className="text-sm">Cargo</Label>
+                <FormLabel className="text-sm">
+                  Como você vai usar a Barber?
+                </FormLabel>
                 <FormControl>
                   <Select
                     onValueChange={field.onChange}
@@ -130,7 +138,7 @@ export const RegisterForm = ({ onSubmit, loading }: RegisterProps) => {
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Selecione um cargo" />
                     </SelectTrigger>
-          
+
                     <SelectContent>
                       <SelectItem value="client">Cliente</SelectItem>
                       <SelectItem value="barber">Barbeiro</SelectItem>
@@ -142,21 +150,21 @@ export const RegisterForm = ({ onSubmit, loading }: RegisterProps) => {
             )}
           />
 
-          <div className="flex items-center justify-between">
-            <div>
+          <div>
+            <div className="w-full">
               <Button
                 type="submit"
                 disabled={loading}
-                className="inline-flex items-center gap-2"
+                className="inline-flex w-full items-center gap-2"
               >
                 <LogIn size={16} />
-                {loading ? "Entrando..." : "Entrar"}
+                {loading ? "Criando conta…" : "Criar conta"}
               </Button>
             </div>
           </div>
 
           <div className="text-sm text-center">
-            Já tem uma conta conta?{" "}
+            Já tem uma conta?{" "}
             <Link to="/login" className="font-medium hover:underline">
               <strong>Entrar</strong>
             </Link>

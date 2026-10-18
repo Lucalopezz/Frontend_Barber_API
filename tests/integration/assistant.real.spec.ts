@@ -201,7 +201,10 @@ test("simulated assistant consults real services and shop-local availability wit
   await page.getByPlaceholder("••••••••").fill(password);
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page).toHaveURL(/\/$/);
-  await page.getByRole("link", { name: "Assistente", exact: true }).click();
+  await page.getByRole("button", { name: "Abrir menu da conta" }).click();
+  await page
+    .getByRole("menuitem", { name: "Assistente experimental", exact: true })
+    .click();
   await expect(page.getByText("Modo simulado", { exact: true })).toBeVisible();
   await expect(
     page.getByText(/Não realiza agendamentos nem cancelamentos/),

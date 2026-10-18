@@ -10,23 +10,24 @@ export const ShopServices = ({ barberShopId }: { barberShopId: string }) => {
   const services: Service[] = data?.data ?? [];
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Serviços</h1>
+    <div className="space-y-6">
+      <h2 className="section-title">Serviços</h2>
+      <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr] items-start">
+        <CreateServiceForm />
 
-      <CreateServiceForm />
+        <section>
+          <h2 className="text-lg font-medium mb-4">Lista de serviços</h2>
 
-      <section>
-        <h2 className="text-lg font-medium mt-4 mb-3">Lista de serviços</h2>
-
-        {isLoading ? (
-          <div className="space-y-3">
-            <Skeleton className="h-20 rounded-xl" />
-            <Skeleton className="h-20 rounded-xl" />
-          </div>
-        ) : (
-          <ServiceList services={services} />
-        )}
-      </section>
+          {isLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-20 rounded-xl" />
+              <Skeleton className="h-20 rounded-xl" />
+            </div>
+          ) : (
+            <ServiceList services={services} />
+          )}
+        </section>
+      </div>
     </div>
   );
 };

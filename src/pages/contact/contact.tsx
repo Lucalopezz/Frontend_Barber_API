@@ -1,31 +1,40 @@
-import { Mail, Phone } from "lucide-react";
-
-export const Contact = () => {
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-4">
-        <h1 className="text-2xl font-semibold text-center">Contato</h1>
-
-        <p className="text-center text-sm text-gray-600">
-          Caso tenha encontrado algum problema ao utilizar o sistema de
-          gerenciamento e agendamento da barbearia, entre em contato pelos
-          canais abaixo:
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+export const Contact = () => (
+  <section className="page-section max-w-3xl mx-auto space-y-7">
+    <header>
+      <h1 className="page-title">Como podemos ajudar?</h1>
+      <p className="mt-4 text-muted-foreground">
+        Encontre o próximo passo para o que você precisa.
+      </p>
+    </header>
+    <div className="panel space-y-6">
+      <div>
+        <h2 className="font-bold">Quero cancelar um horário</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Abra seus agendamentos e escolha Cancelar. O prazo do cliente é de até
+          24 horas antes do início.
         </p>
-
-        <div className="space-y-2 text-center">
-          <p className="font-bold flex items-center gap-2 justify-center">
-            <Mail className="size-4" />
-            Email:
-          </p>
-          <p className="text-gray-700">BarberAPI@myBarberShop.com</p>
-
-          <p className="font-bold mt-4 flex items-center gap-2 justify-center">
-            <Phone className="size-4" />
-            Telefone:
-          </p>
-          <p className="text-gray-700">33 303051894</p>
-        </div>
+        <Button variant="outline" asChild className="mt-4">
+          <Link to="/appointments">Ver agendamentos</Link>
+        </Button>
+      </div>
+      <div className="border-t pt-6">
+        <h2 className="font-bold">Não encontrei horários</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Tente outra data ou serviço. A disponibilidade depende do expediente e
+          dos horários já reservados.
+        </p>
+        <Button variant="outline" asChild className="mt-4">
+          <Link to="/">Encontrar barbearia</Link>
+        </Button>
+      </div>
+      <div className="border-t pt-6">
+        <h2 className="font-bold">Estou começando agora</h2>
+        <Link to="/services" className="mt-2 inline-block text-sm underline">
+          Veja como agendar ou cadastrar sua barbearia
+        </Link>
       </div>
     </div>
-  );
-};
+  </section>
+);

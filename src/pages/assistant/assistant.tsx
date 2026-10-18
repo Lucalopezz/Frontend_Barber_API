@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -113,27 +114,31 @@ function AssistantSession({ token }: { token: string }) {
   }
 
   return (
-    <section className="mx-auto max-w-3xl space-y-6 px-4 py-8">
-      <div className="space-y-2">
-        <p className="inline-block rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-900">
+    <section className="page-section mx-auto max-w-5xl space-y-6 lg:grid lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:gap-7 lg:space-y-0">
+      <div className="space-y-3 lg:col-span-2">
+        <p className="status-badge !bg-[#f0e6e7] !text-[#883d43]">
           Modo simulado
         </p>
-        <h1 className="text-2xl font-semibold text-balance">
-          Assistente de consultas
-        </h1>
-        <p>
-          Este simulador consulta o catálogo e os horários do sistema. Não
-          realiza agendamentos nem cancelamentos e não usa um modelo de IA.
+        <h1 className="page-title">Assistente de consultas</h1>
+        <p className="max-w-2xl text-muted-foreground">
+          Uma experiência de consulta por pergunta. Peça serviços ou horários;
+          para reservar,{" "}
+          <Link to="/" className="font-semibold underline">
+            escolha uma barbearia
+          </Link>
+          . Não realiza agendamentos nem cancelamentos.
         </p>
-        <p className="text-sm text-slate-600">
-          Cada pergunta usa somente o contexto selecionado abaixo. O histórico
-          aparece apenas nesta tela e não é enviado nas próximas perguntas.
-        </p>
+        <details className="max-w-2xl text-sm text-muted-foreground">
+          <summary>Sobre este experimento</summary>
+          <p className="mt-2">
+            É uma simulação com regras simples, criada para estudar consultas
+            por perguntas. Não usa um modelo de IA. Cada pergunta usa somente o
+            contexto selecionado abaixo; não acompanha uma conversa completa.
+          </p>
+        </details>
       </div>
-      <fieldset disabled={pending} className="space-y-4 rounded-xl border p-4">
-        <legend className="px-1 font-semibold">
-          Contexto opcional da consulta
-        </legend>
+      <fieldset disabled={pending} className="space-y-4 panel lg:row-span-2">
+        <legend className="px-1 font-semibold">Escolha onde consultar</legend>
         <label className="block space-y-1">
           Barbearia
           <select
@@ -146,7 +151,7 @@ function AssistantSession({ token }: { token: string }) {
               setServiceId("");
             }}
           >
-            <option value="">Todas / buscar pela pergunta</option>
+            <option value="">Todas as barbearias</option>
             {shops.data?.data.map((shop) => (
               <option key={shop.id} value={shop.id}>
                 {shop.name}
@@ -169,7 +174,7 @@ function AssistantSession({ token }: { token: string }) {
         )}
         {shops.data?.data.length === 0 && <p>Nenhuma barbearia cadastrada.</p>}
         {(shops.data?.meta.lastPage ?? 1) > 1 && (
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Button
               type="button"
               variant="outline"
@@ -199,9 +204,7 @@ function AssistantSession({ token }: { token: string }) {
             value={serviceId}
             onChange={(event) => setServiceId(event.target.value)}
           >
-            <option value="">
-              Selecione uma barbearia e, se desejar, um serviço
-            </option>
+            <option value="">Escolha um serviço (opcional)</option>
             {services.data?.data.map((service) => (
               <option key={service.id} value={service.id}>
                 {service.name} — {service.duration} min
@@ -238,13 +241,11 @@ function AssistantSession({ token }: { token: string }) {
           />
         </label>
         <p className="text-sm text-slate-600">
-          Para consultar horários, selecione barbearia, serviço e data. Os
-          horários usam o fuso da barbearia e podem mudar até a confirmação da
-          reserva.
+          Para ver horários, escolha uma barbearia, um serviço e uma data.
         </p>
       </fieldset>
       <div
-        className="space-y-4"
+        className="min-w-0 space-y-4"
         role="log"
         aria-label="Histórico de consultas"
         aria-live="polite"
@@ -257,10 +258,7 @@ function AssistantSession({ token }: { token: string }) {
           </p>
         )}
         {history.map((exchange, index) => (
-          <article
-            key={index}
-            className="space-y-3 rounded-xl border p-4 break-words"
-          >
+          <article key={index} className="space-y-3 panel break-words">
             <p className="whitespace-pre-wrap">
               <span className="font-semibold">Você: </span>
               <span>{exchange.question}</span>
@@ -275,8 +273,8 @@ function AssistantSession({ token }: { token: string }) {
                   Fontes consultadas
                 </summary>
                 <p className="my-2 text-slate-600">
-                  Dados retornados pelas consultas nesta resposta.
-                  Identificadores aparecem aqui para estudo.
+                  Detalhes técnicos do experimento. Não é necessário interpretar
+                  estes dados para agendar.
                 </p>
                 {exchange.response.toolCalls.map((tool, toolIndex) => (
                   <div key={toolIndex} className="mt-3 space-y-1">
@@ -296,7 +294,7 @@ function AssistantSession({ token }: { token: string }) {
           </article>
         ))}
       </div>
-      <form onSubmit={submit} aria-busy={pending} className="space-y-3">
+      <form onSubmit={submit} aria-busy={pending} className="panel space-y-3">
         <label className="block space-y-1">
           Sua pergunta
           <Textarea
@@ -316,7 +314,7 @@ function AssistantSession({ token }: { token: string }) {
         <Button type="submit" disabled={pending}>
           {pending ? "Consultando…" : "Enviar pergunta"}
         </Button>
-        {pending && <p role="status">Consultando as fontes do sistema…</p>}
+        {pending && <p role="status">Buscando informações…</p>}
       </form>
     </section>
   );
