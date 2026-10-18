@@ -27,4 +27,4 @@ Este workflow cobre a interface com API controlada. A integração com API e Pos
 
 ## Estado da validação
 
-A presença deste arquivo não comprova uma execução no GitHub. Registre no [relatório da entrega](../.scratch/ci-frontend/validacao.md) separadamente a validação local, a análise do workflow e uma futura execução remota. Configurar um check como obrigatório na proteção de branch exige uma decisão administrativa separada.
+A entrega passou em análise do workflow, validação local e execução no [GitHub Actions pelo PR #1](https://github.com/Lucalopezz/Frontend_Barber_API/pull/1). O [relatório da entrega](../.scratch/ci-frontend/validacao.md) distingue essas evidências e o teste local de retenção de traces. Configurar um check como obrigatório na proteção de branch exige uma decisão administrativa separada.

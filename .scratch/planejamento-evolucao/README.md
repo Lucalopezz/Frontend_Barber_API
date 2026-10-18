@@ -1,6 +1,6 @@
 # Evolução do Barber — decisões de 18/10/2026
 
-Status: remoção do assistente concluída e validada em 18/10/2026. CI do frontend implementado e validado localmente, com publicação de branch e PR autorizada para verificar a execução remota. As demais entregas aguardam sua vez e nova autorização.
+Status: remoção do assistente e CI do frontend concluídos e validados em 18/10/2026. O CI passou também no GitHub Actions pelo PR #1; merge após checks aprovados autorizado pelo usuário. As demais entregas aguardam sua vez e nova autorização.
 
 A revisão de UX/interface da lista original está concluída. A evolução do assistente foi substituída por sua remoção completa, por decisão do usuário. As demais decisões foram confirmadas em rodadas de grilling.
 
@@ -31,7 +31,7 @@ A remoção foi desenvolvida em worktrees independentes de frontend e backend, r
 
 O usuário pediu uma pausa ao final de cada spec, com resumo no chat e autorização explícita antes de começar a seguinte. Posteriormente autorizou expressamente iniciar o CI do frontend assim que a remoção estivesse validada e commitada. Essa autorização não libera automaticamente a integração entre repositórios, refresh token ou cache.
 
-O CI do frontend foi implementado em outra worktree, revisado independentemente e passou em actionlint, lint, build e 40 testes com Node 24 e Chromium gerenciado pelo Playwright. Uma falha temporária confirmou saída não zero e retenção do trace. A execução remota está em preparação, com branch e PR autorizados. Evidências em [validação do CI](../ci-frontend/validacao.md).
+O CI do frontend foi implementado em outra worktree, revisado independentemente e passou em actionlint, lint, build e 40 testes com Node 24 e Chromium gerenciado pelo Playwright. Uma falha temporária confirmou saída não zero e retenção do trace. O [PR #1](https://github.com/Lucalopezz/Frontend_Barber_API/pull/1) passou no GitHub Actions com 40 testes, além do check de segurança. Evidências em [validação do CI](../ci-frontend/validacao.md).
 
 ## Limites da consolidação
 

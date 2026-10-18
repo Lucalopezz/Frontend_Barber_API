@@ -1,6 +1,6 @@
 # CI independente do frontend
 
-Status: implementado e validado localmente em 18/10/2026; execução remota em preparação, autorizada pelo usuário. Evidências e limites em [validacao.md](validacao.md).
+Status: concluído e validado localmente e no GitHub Actions em 18/10/2026, no PR #1. Evidências e limites em [validacao.md](validacao.md).
 
 ## Problema
 
