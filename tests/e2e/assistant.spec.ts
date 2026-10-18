@@ -250,3 +250,26 @@ test("mobile navigation exposes assistant and question length is limited", async
     fullPage: true,
   });
 });
+
+test("whitespace-only question shows accessible feedback without calling the API and accepts a valid retry", async ({
+  page,
+}) => {
+  let requests = 0;
+  await page.route("**/assistant/chat", (route) => {
+    requests++;
+    return respond(route, 200, reply);
+  });
+  await login(page);
+  await ask(page, "   ");
+  await expect(page.getByRole("alert")).toHaveText(
+    "Digite uma pergunta antes de enviar.",
+  );
+  await expect(page.getByLabel("Sua pergunta")).toHaveValue("   ");
+  expect(requests).toBe(0);
+  await ask(page, "Quais serviços estão disponíveis?");
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(
+    page.getByText(reply.data.answer, { exact: true }),
+  ).toBeVisible();
+  expect(requests).toBe(1);
+});

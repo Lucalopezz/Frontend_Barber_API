@@ -54,7 +54,12 @@ function AssistantSession({ token }: { token: string }) {
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     const question = message.trim();
-    if (request.current || !question) return;
+    if (request.current) return;
+    if (!question) {
+      setError("Digite uma pergunta antes de enviar.");
+      questionInput.current?.focus();
+      return;
+    }
     const controller = new AbortController();
     request.current = controller;
     setPending(true);
