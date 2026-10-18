@@ -1,0 +1,332 @@
+name: Integrated CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      peer_sha:
+        description: SHA completo do outro projeto; vazio usa a main
+        required: false
+        default: ''
+        type: string
+  workflow_call:
+    inputs:
+      peer_sha:
+        description: SHA completo do outro projeto; vazio usa a main
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integration-${{ github.repository }}-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}-${{ inputs.peer_sha || 'main' }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    name: Jornada com API e PostgreSQL
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: integration-test-only
+          POSTGRES_DB: barber_api
+        ports:
+          - 5450:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d barber_api"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      # Em workflow_call, estes contextos descrevem o repositório chamador.
+      # O token de leitura existe apenas neste passo, antes de executar os projetos.
+      - name: Resolver e registrar as duas revisões
+        id: revisions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_REPOSITORY: ${{ github.repository }}
+          SOURCE_SHA: ${{ github.sha }}
+          SOURCE_EVENT: ${{ github.event_name }}
+          SOURCE_REF: ${{ github.ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
+          PR_NUMBER: ${{ github.event.pull_request.number || '' }}
+          PEER_SHA: ${{ inputs.peer_sha || '' }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync, writeFileSync } from 'node:fs';
+          import { join } from 'node:path';
+
+          const frontend = 'Lucalopezz/Frontend_Barber_API';
+          const backend = 'Lucalopezz/Projeto_Barber_API';
+          const source = process.env.SOURCE_REPOSITORY;
+          const requested = process.env.PEER_SHA;
+          const shaPattern = /^[0-9a-f]{40}$/i;
+          const metadataPath = join(process.env.RUNNER_TEMP, 'integration-revisions.json');
+          const metadata = {
+            source: {
+              repository: source,
+              event: process.env.SOURCE_EVENT,
+              ref: process.env.SOURCE_REF,
+              sha: process.env.SOURCE_SHA,
+              sha_kind: process.env.SOURCE_EVENT === 'pull_request' ? 'test_merge' : 'workflow_sha',
+              pr_head_sha: process.env.PR_HEAD_SHA || null,
+              pr_number: process.env.PR_NUMBER || null,
+            },
+            peer: {
+              selection: requested ? 'override' : 'main',
+              requested_sha: requested || null,
+            },
+            checkout_verified: false,
+            status: 'resolving',
+          };
+          const save = () => writeFileSync(metadataPath, `${JSON.stringify(metadata, null, 2)}\n`);
+          save();
+
+          try {
+            if (![frontend, backend].includes(source)) {
+              throw new Error('Repositório chamador fora da allowlist.');
+            }
+            if (!shaPattern.test(process.env.SOURCE_SHA)) {
+              throw new Error('SHA de origem inválido.');
+            }
+            if (requested && !shaPattern.test(requested)) {
+              throw new Error('peer_sha exige exatamente 40 caracteres hexadecimais.');
+            }
+            if (process.env.PR_HEAD_SHA && !shaPattern.test(process.env.PR_HEAD_SHA)) {
+              throw new Error('SHA do head do PR inválido.');
+            }
+
+            const peer = source === frontend ? backend : frontend;
+            metadata.peer.repository = peer;
+            // A main do par é consultada uma única vez; os checkouts usam somente SHAs.
+            const response = await fetch(
+              `https://api.github.com/repos/${peer}/commits/${requested || 'main'}`,
+              {
+                headers: {
+                  Accept: 'application/vnd.github+json',
+                  Authorization: `Bearer ${process.env.GH_TOKEN}`,
+                  'X-GitHub-Api-Version': '2022-11-28',
+                },
+                signal: AbortSignal.timeout(30_000),
+              },
+            );
+            if (!response.ok) {
+              throw new Error(`Não foi possível resolver o commit no repositório do par (HTTP ${response.status}).`);
+            }
+            const commit = await response.json();
+            if (!shaPattern.test(commit.sha ?? '')) {
+              throw new Error('GitHub retornou um SHA inválido para o par.');
+            }
+            if (requested && commit.sha.toLowerCase() !== requested.toLowerCase()) {
+              throw new Error('O commit resolvido diverge do override solicitado.');
+            }
+
+            metadata.peer.resolved_sha = commit.sha.toLowerCase();
+            metadata.frontend = {
+              repository: frontend,
+              sha: source === frontend ? process.env.SOURCE_SHA.toLowerCase() : metadata.peer.resolved_sha,
+            };
+            metadata.backend = {
+              repository: backend,
+              sha: source === backend ? process.env.SOURCE_SHA.toLowerCase() : metadata.peer.resolved_sha,
+            };
+            metadata.status = 'resolved';
+            save();
+            for (const project of ['frontend', 'backend']) {
+              appendFileSync(process.env.GITHUB_OUTPUT, `${project}_sha=${metadata[project].sha}\n`);
+            }
+            const summary = [
+              '## Revisões da integração',
+              '',
+              `Origem: ${source}; evento: ${metadata.source.event}; ref: ${metadata.source.ref}.`,
+              `Seleção do par: **${metadata.peer.selection}**.`,
+              '',
+              '| Projeto | SHA executado |',
+              '| --- | --- |',
+              `| Frontend | \`${metadata.frontend.sha}\` |`,
+              `| Backend | \`${metadata.backend.sha}\` |`,
+              '',
+              metadata.source.pr_head_sha
+                ? `Head do PR: \`${metadata.source.pr_head_sha}\`. O SHA de origem executado é o merge de teste: \`${metadata.source.sha}\`.`
+                : `SHA de origem: \`${metadata.source.sha}\`.`,
+              '',
+              requested
+                ? 'Override explícito: este resultado não comprova compatibilidade com a main do outro projeto.'
+                : 'A main do outro projeto foi resolvida uma vez, antes dos checkouts.',
+              '',
+            ].join('\n');
+            appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
+            console.log(summary);
+          } catch (error) {
+            metadata.status = 'resolution_failed';
+            metadata.error = error.message;
+            save();
+            throw error;
+          }
+          NODE
+
+      - name: Checkout do frontend
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: Lucalopezz/Frontend_Barber_API
+          ref: ${{ steps.revisions.outputs.frontend_sha }}
+          path: frontend
+          persist-credentials: false
+
+      - name: Checkout do backend
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: Lucalopezz/Projeto_Barber_API
+          ref: ${{ steps.revisions.outputs.backend_sha }}
+          path: backend
+          persist-credentials: false
+
+      - name: Conferir SHAs efetivamente obtidos
+        run: |
+          node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process';
+          import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
+          import { join } from 'node:path';
+
+          const path = join(process.env.RUNNER_TEMP, 'integration-revisions.json');
+          const metadata = JSON.parse(readFileSync(path, 'utf8'));
+          for (const project of ['frontend', 'backend']) {
+            const actual = execFileSync('git', ['rev-parse', 'HEAD'], {
+              cwd: join(process.env.GITHUB_WORKSPACE, project),
+              encoding: 'utf8',
+            }).trim();
+            if (actual !== metadata[project].sha) {
+              throw new Error(`Checkout de ${project} diverge do SHA resolvido.`);
+            }
+          }
+          metadata.checkout_verified = true;
+          writeFileSync(path, `${JSON.stringify(metadata, null, 2)}\n`);
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY, '\nOs dois checkouts foram conferidos com git rev-parse HEAD.\n');
+          NODE
+
+      - name: Preparar pnpm do frontend
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: frontend/package.json
+          run_install: false
+
+      - name: Preparar Node e cache dos dois lockfiles
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: |
+            frontend/pnpm-lock.yaml
+            backend/pnpm-lock.yaml
+
+      - name: Criar env exclusivos do banco de teste
+        run: |
+          node --input-type=module <<'NODE'
+          import { randomBytes } from 'node:crypto';
+          import { readFileSync, writeFileSync } from 'node:fs';
+          import { join } from 'node:path';
+          import { parseEnv } from 'node:util';
+
+          const directory = join(process.env.GITHUB_WORKSPACE, 'backend');
+          const example = parseEnv(readFileSync(join(directory, '.env.test.example'), 'utf8'));
+          const environment = {
+            ...example,
+            APP_PORT: '3002',
+            NODE_ENV: 'test',
+            DATABASE_URL: 'postgresql://postgres:integration-test-only@127.0.0.1:5450/barber_api?schema=barber_api_test',
+            JWT_SECRET: randomBytes(48).toString('hex'),
+            CORS_ALLOWED_ORIGINS: 'http://127.0.0.1:5175',
+          };
+          const database = new URL(environment.DATABASE_URL);
+          if (
+            environment.NODE_ENV !== 'test' ||
+            database.protocol !== 'postgresql:' ||
+            database.hostname !== '127.0.0.1' ||
+            database.port !== '5450' ||
+            database.pathname !== '/barber_api' ||
+            database.searchParams.get('schema') !== 'barber_api_test'
+          ) {
+            throw new Error('A integração aceita somente o banco local e schema exclusivo de teste.');
+          }
+          const contents = Object.entries(environment)
+            .map(([key, value]) => `${key}=${JSON.stringify(value)}`)
+            .join('\n') + '\n';
+          // wx rejeita arquivos preexistentes. Generate também recebe destino de teste.
+          for (const filename of ['.env.test', '.env.development']) {
+            writeFileSync(join(directory, filename), contents, { flag: 'wx', mode: 0o600 });
+          }
+          NODE
+
+      - name: Instalar dependências do frontend
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Instalar dependências do backend
+        working-directory: backend
+        run: pnpm install --frozen-lockfile
+
+      - name: Gerar Prisma Client
+        working-directory: backend
+        run: pnpm prisma:generate
+
+      - name: Aplicar migrations existentes no schema de teste
+        working-directory: backend
+        run: pnpm prisma:migrate:test
+
+      - name: Compilar API
+        working-directory: backend
+        run: pnpm build
+
+      - name: Compilar frontend
+        working-directory: frontend
+        env:
+          VITE_API_URL: http://127.0.0.1:3002/api/v1
+        run: pnpm build
+
+      - name: Instalar Chromium e dependências do sistema
+        working-directory: frontend
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Jornada real sem mocks HTTP
+        id: integration
+        working-directory: frontend
+        env:
+          BARBER_API_DIR: ${{ github.workspace }}/backend
+        run: pnpm test:integration
+
+      - name: Reunir evidências disponíveis
+        if: ${{ always() }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { copyFileSync, cpSync, existsSync, mkdirSync } from 'node:fs';
+          import { join } from 'node:path';
+
+          const destination = join(process.env.RUNNER_TEMP, 'integration-evidence');
+          mkdirSync(destination, { recursive: true });
+          const revisions = join(process.env.RUNNER_TEMP, 'integration-revisions.json');
+          if (existsSync(revisions)) {
+            copyFileSync(revisions, join(destination, 'integration-revisions.json'));
+          }
+          const results = join(process.env.GITHUB_WORKSPACE, 'frontend', 'test-results');
+          if (existsSync(results)) {
+            cpSync(results, join(destination, 'frontend', 'test-results'), { recursive: true });
+          }
+          NODE
+
+      - name: Preservar revisões e traces de falha
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: integration-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/integration-evidence/
+          retention-days: 7
+          if-no-files-found: warn
