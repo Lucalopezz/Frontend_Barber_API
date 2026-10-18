@@ -2,6 +2,8 @@
 
 A suíte abre a aplicação no Chromium e intercepta todas as chamadas de API. Usa contas e tokens fictícios, sem API, Docker ou banco de dados.
 
+No GitHub Actions, [Frontend CI](../../.github/workflows/ci.yml) executa lint, build e toda esta suíte com dois workers em pull requests e pushes na `main`. Usa zero retries e rejeita testes exclusivos (`test.only`). Traces de falhas são publicados por sete dias; consulte [o procedimento de CI e investigação](../../docs/ci-frontend.md). A integração real é uma entrega separada.
+
 ```bash
 pnpm install --frozen-lockfile
 pnpm exec playwright install chromium

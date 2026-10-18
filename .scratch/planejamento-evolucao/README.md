@@ -1,6 +1,6 @@
 # Evolução do Barber — decisões de 18/10/2026
 
-Status: remoção do assistente concluída e validada em 18/10/2026. O usuário autorizou commits e o início do CI do frontend após essa conclusão. As demais entregas aguardam sua vez e nova autorização.
+Status: remoção do assistente concluída e validada em 18/10/2026. CI do frontend implementado e validado localmente, com publicação de branch e PR autorizada para verificar a execução remota. As demais entregas aguardam sua vez e nova autorização.
 
 A revisão de UX/interface da lista original está concluída. A evolução do assistente foi substituída por sua remoção completa, por decisão do usuário. As demais decisões foram confirmadas em rodadas de grilling.
 
@@ -30,6 +30,8 @@ As dependências acima registram a ordem acordada, não uma afirmação de impos
 A remoção foi desenvolvida em worktrees independentes de frontend e backend, revisada por um terceiro agente e integrada nos checkouts principais. Após uma tentativa bloqueada pelo sandbox, a validação foi retomada com execução autorizada fora dele: 35 testes de arquitetura, 169 unidades, 186 integrações e 57 testes HTTP da API, 40 testes de interface e uma jornada com API/PostgreSQL reais passaram. Consulte o [relatório de validação](../../../Projeto_Barber_API/.scratch/remocao-assistente/validacao.md).
 
 O usuário pediu uma pausa ao final de cada spec, com resumo no chat e autorização explícita antes de começar a seguinte. Posteriormente autorizou expressamente iniciar o CI do frontend assim que a remoção estivesse validada e commitada. Essa autorização não libera automaticamente a integração entre repositórios, refresh token ou cache.
+
+O CI do frontend foi implementado em outra worktree, revisado independentemente e passou em actionlint, lint, build e 40 testes com Node 24 e Chromium gerenciado pelo Playwright. Uma falha temporária confirmou saída não zero e retenção do trace. A execução remota está em preparação, com branch e PR autorizados. Evidências em [validação do CI](../ci-frontend/validacao.md).
 
 ## Limites da consolidação
 

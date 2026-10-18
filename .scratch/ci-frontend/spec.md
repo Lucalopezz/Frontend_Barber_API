@@ -1,6 +1,6 @@
 # CI independente do frontend
 
-Status: planejado; decisões confirmadas pelo usuário em 18/10/2026. Não implementado.
+Status: implementado e validado localmente em 18/10/2026; execução remota em preparação, autorizada pelo usuário. Evidências e limites em [validacao.md](validacao.md).
 
 ## Problema
 
