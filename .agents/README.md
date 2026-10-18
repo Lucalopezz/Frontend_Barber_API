@@ -70,3 +70,7 @@ O auditor inclui um script Python somente leitura, revisado antes da execução 
 As cópias da skill no front e no back devem ser atualizadas juntas e permanecer idênticas; ao mudá-las, regenere os hashes de `localSkills` e execute o validador da `skill-creator`, além de verificar os comandos afetados. O procedimento real está no `SKILL.md` e nas referências, evitando outra lista de comandos que possa divergir.
 
 PS: o fluxo da skill própria agora inclui `pnpm test:architecture` e `pnpm check:architecture` na API, antes de lint/build/testes. As duas cópias e os hashes de `localSkills` foram atualizados juntos.
+
+## PS — criação de interface
+
+`frontend-design`, da Anthropic, foi instalada em revisão fixa `dbd4588f9e1033efb41dad4bef2f7947c8993d44`, com licença e hashes no lock. Usar para criação/repaginação visual; complementar com revisão de acessibilidade e testes. Não contém scripts. A skill fica disponível para descoberta no próximo turno; nesta entrega foi lida diretamente. Fontes locais Barlow Condensed e Manrope vêm de google/fonts, com licenças OFL em `src/assets/fonts`; não há chamadas externas para carregar fontes no navegador.

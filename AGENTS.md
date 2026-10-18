@@ -34,3 +34,5 @@
 - Use `grill-me`/`grilling`, `to-spec` e `to-tickets` quando solicitados; não transforme ajustes pequenos em entrevistas. Quando a interface não tiver ferramenta `Skill`, carregue o `SKILL.md` local diretamente; `grill-me` carrega `grilling`.
 
 - Use a skill própria `barber-local-setup` em `.agents/skills/barber-local-setup/SKILL.md` para preparar/verificar o ambiente Barber, inclusive worktrees. Ela distingue diagnóstico sem mutações de preparação e verificação, preserva env existentes e coordena o schema compartilhado de testes.
+
+- Para criação/repaginação de telas, use também `.agents/skills/frontend-design/SKILL.md`. A identidade e os princípios de interface estão em `docs/interface.md`; textos da aplicação devem orientar tarefas de clientes/profissionais, deixando detalhes técnicos do laboratório em áreas explicitamente opcionais.
