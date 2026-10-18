@@ -25,3 +25,10 @@
 - Na entrega, informe quais cenários foram cobertos e o resultado das execuções. Só afirme que seguiu TDD se o ciclo RED/GREEN foi realmente observado; registre quando usou a exceção visual.
 
 - A jornada integrada com API e PostgreSQL reais usa `pnpm test:integration`; pré-requisitos e isolamento em `tests/integration/README.md`. Não a execute em paralelo com testes do backend que limpem `barber_api_test`.
+
+## Agent skills
+
+- Workflow de docs, grilling, spec e tarefas: consulte `docs/agents/workflow.md`. Instruções do projeto e do usuário prevalecem sobre exemplos genéricos das skills; preserve português, pnpm, TDD e docs históricas.
+- Issue tracker: Markdown local em `.scratch/<feature-slug>/`; detalhes em `docs/agents/issue-tracker.md`. “Publicar” uma spec/tarefa significa escrever arquivo local, sem criar issues ou labels remotos. O setup já está concluído.
+- Fontes de domínio e convenção de contexto único: `docs/agents/domain.md`; glossários/ADRs ausentes não bloqueiam o trabalho.
+- Use `grill-me`/`grilling`, `to-spec` e `to-tickets` quando solicitados; não transforme ajustes pequenos em entrevistas. Quando a interface não tiver ferramenta `Skill`, carregue o `SKILL.md` local diretamente; `grill-me` carrega `grilling`.
