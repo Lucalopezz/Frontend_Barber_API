@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AddressFields } from "../barberShop/AddressFields";
 
 import { cn } from "@/lib/utils";
 import {
@@ -33,6 +34,7 @@ export const CreateBarberShopDialog = ({
 }: TransactionDialogProps) => {
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<z.infer<typeof BarberShopSchema>>({
@@ -86,25 +88,21 @@ export const CreateBarberShopDialog = ({
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="address" className="text-right text-gray-700">
+            <Label className="text-right text-gray-700">
               Endereço
             </Label>
-            <div className="col-span-3">
-              <Input
-                id="address"
-                type="text"
-                {...register("address")}
-                placeholder="Rua, número, cidade – estado"
-                className={cn(
-                  "border-none text-gray-700 placeholder-gray-400",
-                  errors.address && "border-red-500",
+            <div className="col-span-3 text-gray-700">
+              <Controller
+                control={control}
+                name="address"
+                render={({ field }) => (
+                  <AddressFields
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={errors.address?.message}
+                  />
                 )}
               />
-              {errors.address && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.address.message}
-                </p>
-              )}
             </div>
           </div>
 

@@ -16,6 +16,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { BarberShop } from "@/types/barberShop.type";
 import { useUpdateBarberShop } from "@/hooks/queries/barberShops/useUpdateBarberShop";
+import { AddressFields } from "./AddressFields";
 
 export const BarberShopSchema = z.object({
   name: z.string().min(3, "Nome muito curto"),
@@ -87,7 +88,7 @@ export const ShopUpdateForm = ({ shop }: ShopUpdateFormProps) => {
                   <FormItem>
                     <FormLabel>Endereço</FormLabel>
                     <FormControl>
-                      <Input placeholder="Rua X, 123, Cidade – UF" {...field} />
+                      <AddressFields value={field.value} onChange={field.onChange} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
