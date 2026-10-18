@@ -1,5 +1,12 @@
 # React + TypeScript + Vite
 
+> **PS — mudança de foco em 17/10/2026:** este front fazia parte de um projeto
+> de estudo de barbearias que ficou incompleto. A partir deste ponto, ele passa
+> a servir também como laboratório para estudar IA, skills, agentes e Git
+> worktrees, junto com a Barber Shop API. A documentação original foi
+> preservada abaixo. Veja o [ambiente e estado atual](./docs/estado-atual.md)
+> para executar com pnpm e conhecer as limitações reais.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
