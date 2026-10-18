@@ -1,5 +1,7 @@
 # Pendências de interface e experiência
 
+> Histórico de feedback e da repaginação. O assistente experimental mencionado abaixo foi removido posteriormente, incluindo tela e navegação. As recomendações específicas do simulador deixaram de se aplicar.
+
 ## P1 — revisar clareza e qualidade visual da aplicação
 
 Feedback do usuário registrado em 18/10/2026:

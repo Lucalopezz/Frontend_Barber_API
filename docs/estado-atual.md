@@ -1,5 +1,7 @@
 # Ambiente e estado atual — 17/10/2026
 
+> **Atualização — remoção do assistente:** a funcionalidade experimental e seus testes exclusivos foram removidos. As propostas e resultados relacionados ao assistente abaixo são históricos; catálogo, disponibilidade e agendamento continuam sendo recursos ativos.
+
 > **Atualização — skills, autenticação e processo:** as skills de Playwright, React, Web Design
 > Guidelines e Security Best Practices estão em `.agents/skills`, com origens,
 > revisões e hashes registrados em `.agents/skills-lock.json`. Consulte

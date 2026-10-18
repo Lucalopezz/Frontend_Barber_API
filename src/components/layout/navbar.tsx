@@ -4,7 +4,6 @@ import {
   LogOut,
   Scissors,
   Search,
-  FlaskConical,
   CircleHelp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -78,13 +77,6 @@ export const Navbar = ({ isAuthenticated, onLogout }: NavbarProps) => (
                   <Link to="/services">
                     <CircleHelp aria-hidden="true" />
                     Como funciona
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/assistant">
-                    <FlaskConical aria-hidden="true" />
-                    Assistente experimental
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
