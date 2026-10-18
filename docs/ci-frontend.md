@@ -23,7 +23,7 @@ CI=true pnpm test:e2e --workers=2
 
 Em uma máquina Linux sem as bibliotecas do navegador, consulte a preparação de Playwright; no runner, o workflow instala essas bibliotecas com `--with-deps`. Os detalhes da suíte estão em [tests/e2e/README.md](../tests/e2e/README.md).
 
-Este workflow cobre a interface com API controlada. A integração com API e PostgreSQL reais usa [outro procedimento](../tests/integration/README.md) e sua automação entre repositórios pertence à próxima entrega. O workflow não configura deploy nem proteção administrativa da `main`.
+Este workflow cobre a interface com API controlada. A integração com API e PostgreSQL reais tem [workflow entre repositórios](ci-integracao.md) e [procedimento local](../tests/integration/README.md) próprios. O workflow não configura deploy nem proteção administrativa da `main`.
 
 ## Estado da validação
 

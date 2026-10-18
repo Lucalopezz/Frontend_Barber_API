@@ -2,6 +2,8 @@
 
 `pnpm test:e2e` cobre a interface com respostas HTTP controladas. `pnpm test:integration` usa Chromium, a API compilada e PostgreSQL reais, sem mocks HTTP.
 
+O [CI integrado](../../docs/ci-integracao.md) automatiza esta jornada em PRs e pushes na `main` dos dois projetos, registra os dois SHAs e permite escolher um commit do outro repositório na execução manual. O procedimento abaixo prepara a execução local; no GitHub, cada job recebe PostgreSQL próprio e env exclusivos de teste.
+
 Pré-requisitos: Node >=24.9, pnpm, Docker e os dois repositórios lado a lado. Para outro caminho da API, defina `BARBER_API_DIR`.
 
 No backend:
