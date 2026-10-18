@@ -1,5 +1,29 @@
 # Ambiente e estado atual — 17/10/2026
 
+> **Atualização — skills, autenticação e processo:** as skills de Playwright, React, Web Design
+> Guidelines e Security Best Practices estão em `.agents/skills`, com origens,
+> revisões e hashes registrados em `.agents/skills-lock.json`. Consulte
+> `.agents/README.md` para uso e compatibilidade com Vite. O `AGENTS.md` passou
+> a exigir TDD e regressão automatizada para bugs; telas podem ser feitas
+> primeiro e testadas antes da conclusão. O diagnóstico inicial abaixo foi
+> preservado como registro da retomada.
+
+O login agora bloqueia reenvios enquanto a requisição está pendente e tem labels
+associadas aos campos. O logout não dispara notificações durante o render, a
+expiração da sessão mantém um aviso visível e um `401` atrasado da conta anterior
+não encerra a sessão recém-aberta. Um `401` do próprio login também preserva a
+sessão existente. Sete regressões permanentes em `tests/e2e/auth.spec.ts` passaram
+com `pnpm test:e2e`; seis falhavam no código anterior e uma já passava.
+O runner inicia e encerra o Vite em 5174 e intercepta a API com dados fictícios,
+sem banco. Veja `tests/e2e/README.md`. Build e lint passaram após a integração.
+
+Os defeitos foram reproduzidos no navegador antes da implementação. Parte do
+código já estava iniciada quando foi solicitada a regra de TDD; a suíte
+permanente foi acrescentada em seguida e validada contra o baseline e a
+correção. O backend também passou a devolver `409` para indisponibilidade,
+coberto por sete regressões com Fastify real, totalizando 329 testes de backend
+aprovados nesta rodada.
+
 O projeto de estudo incompleto passa a servir também como laboratório de IA,
 skills, agentes e worktrees. O README original foi preservado com uma nota.
 O backend continua no repositório independente `Projeto_Barber_API`, ao lado

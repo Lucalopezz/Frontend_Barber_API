@@ -1,16 +1,23 @@
 import api from "@/utils/api";
-import { showToast } from "@/utils/toast";
+import type { AxiosError } from "axios";
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401 && localStorage.getItem("token")) {
+  (error: AxiosError) => {
+    const token = localStorage.getItem("token");
+    const requestAuthorization = error.config?.headers.get("Authorization");
+    const isLoginRequest = error.config?.url === "/users/login";
+
+    if (
+      error.response?.status === 401 &&
+      token &&
+      requestAuthorization === `Bearer ${token}` &&
+      !isLoginRequest
+    ) {
       localStorage.removeItem("token");
       api.defaults.headers.Authorization = "";
-
-      showToast("Sessão expirada. Faça login novamente.", "error");
-
-      window.location.href = "/login";
+      sessionStorage.setItem("sessionExpired", "true");
+      window.location.replace("/login");
     }
     return Promise.reject(error);
   },

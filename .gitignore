@@ -24,3 +24,12 @@ dist-ssr
 *.sw?
 
 .env
+.env.*
+!.env.example
+
+# Browser automation artifacts can contain session data
+/test-results/
+/playwright-report/
+/playwright/.cache/
+/.playwright-cli/
+/output/playwright/

@@ -1,0 +1,25 @@
+# Regressões de autenticação
+
+A suíte abre a aplicação no Chromium e intercepta todas as chamadas de API. Usa contas e tokens fictícios, sem API, Docker ou banco de dados.
+
+```bash
+pnpm install --frozen-lockfile
+pnpm exec playwright install chromium
+pnpm test:e2e
+```
+
+O comando inicia e encerra um Vite isolado em `127.0.0.1:5174`. A porta precisa estar livre. Se já houver um servidor da mesma revisão, informe sua origem:
+
+```bash
+PLAYWRIGHT_BASE_URL=http://127.0.0.1:5174 pnpm test:e2e
+```
+
+Para reutilizar um Chromium instalado no sistema, sem baixar outro navegador:
+
+```bash
+PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium pnpm test:e2e
+```
+
+As regressões cobrem labels e autofill; bloqueio de reenvio enquanto o login está pendente; falha e nova tentativa; logout sem notificações duplicadas ou efeitos durante render; restauração após reload e troca de conta; expiração da sessão atual com mensagem após redirecionar; resposta 401 atrasada da conta anterior; e 401 do endpoint público de login sem invalidar a sessão existente.
+
+As respostas atrasadas são controladas por promises nos testes. Não dependem do tempo de resposta de um backend real. Traces de falhas ficam em `test-results/`, ignorado pelo Git; podem conter dados da sessão de teste. Esta suíte não substitui o smoke de integração com a API real.
