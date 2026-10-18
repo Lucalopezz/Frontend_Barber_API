@@ -1,4 +1,10 @@
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -11,34 +17,30 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import {
+  ServiceSchema,
+  type ServiceFields,
+  type ServiceValues,
+} from "./service-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Pencil } from "lucide-react";
 import type { Service } from "@/types/services.type";
 import { useUpdateService } from "@/hooks/queries/services/useUpdateService";
 
-const ServiceSchema = z.object({
-  name: z.string().min(2),
-  price: z.number().min(0),
-  description: z.string().min(1, "Informe a descrição"),
-  duration: z.number().min(1),
-});
-type ServiceForm = z.infer<typeof ServiceSchema>;
-
 export const ServiceEditDialog = ({ service }: { service: Service }) => {
-  const form = useForm<ServiceForm>({
+  const form = useForm<ServiceFields, unknown, ServiceValues>({
     resolver: zodResolver(ServiceSchema),
     defaultValues: {
       name: service.name,
-      price: service.price,
+      price: String(service.price).replace(".", ","),
       description: service.description ?? "",
-      duration: service.duration,
+      duration: String(service.duration),
     },
   });
 
   const update = useUpdateService(service.id);
 
-  const onSubmit = (values: ServiceForm) => {
+  const onSubmit = (values: ServiceValues) => {
     update.mutate(values);
   };
 
@@ -51,6 +53,10 @@ export const ServiceEditDialog = ({ service }: { service: Service }) => {
       </DialogTrigger>
 
       <DialogContent>
+        <DialogTitle>Editar serviço</DialogTitle>
+        <DialogDescription>
+          Atualize o valor, a duração ou a descrição.
+        </DialogDescription>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
             <FormField
@@ -74,7 +80,13 @@ export const ServiceEditDialog = ({ service }: { service: Service }) => {
                 <FormItem>
                   <FormLabel>Preço (R$)</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" {...field} onChange={(event) => field.onChange(Number(event.target.value))} />
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="Ex.: 45,00"
+                      autoComplete="off"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -88,7 +100,7 @@ export const ServiceEditDialog = ({ service }: { service: Service }) => {
                 <FormItem>
                   <FormLabel>Duração (min)</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} onChange={(event) => field.onChange(Number(event.target.value))} />
+                    <Input type="text" inputMode="numeric" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -109,6 +121,17 @@ export const ServiceEditDialog = ({ service }: { service: Service }) => {
               )}
             />
 
+            {update.isError && (
+              <p role="alert" className="text-sm text-destructive">
+                Não foi possível salvar o serviço. Seus dados foram mantidos;
+                tente novamente.
+              </p>
+            )}
+            {update.isSuccess && (
+              <p role="status" className="text-sm">
+                Serviço salvo.
+              </p>
+            )}
             <div className="flex gap-2 justify-end">
               <Button type="submit" disabled={update.isPending}>
                 Salvar

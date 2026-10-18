@@ -19,16 +19,21 @@ export const ShopDangerZone = ({ shop }: { shop: BarberShop }) => {
   const deleteMutation = useDeleteBarberShop(shop.id);
 
   return (
-    <Card className="border-red-300 rounded-2xl">
+    <Card className="border-red-200 rounded-xl">
       <CardHeader>
-        <CardTitle className="text-xl text-red-600">Zona de Perigo</CardTitle>
+        <CardTitle className="text-lg text-red-800">
+          Excluir barbearia
+        </CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-4">
         <p className="text-sm text-gray-600">
-          Excluir a barbearia removerá todos os dados permanentemente, incluindo
-          informações de clientes, agendamentos e serviços e{" "}
-          <strong>O PERFIL DO DONO</strong>.
+          Excluir a barbearia remove também seus serviços. Essa ação não pode
+          ser desfeita.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Seu perfil permanece. Barbearias com agendamentos não podem ser
+          excluídas.
         </p>
 
         <AlertDialog>

@@ -10,30 +10,25 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import {
+  ServiceSchema,
+  type ServiceFields,
+  type ServiceValues,
+} from "./service-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { useCreateService } from "@/hooks/queries/services/useCreateService";
 import { Textarea } from "../ui/textarea";
 
-const ServiceSchema = z.object({
-  name: z.string().min(2, "Nome muito curto"),
-  price: z.number().min(0, "Preço inválido"),
-  description: z.string().min(1, "Informe a descrição"),
-  duration: z.number().min(1, "Duração inválida (minutos)"),
-});
-
-type ServiceForm = z.infer<typeof ServiceSchema>;
-
 export const CreateServiceForm = () => {
-  const form = useForm<ServiceForm>({
+  const form = useForm<ServiceFields, unknown, ServiceValues>({
     resolver: zodResolver(ServiceSchema),
-    defaultValues: { name: "", price: 0, description: "", duration: 30 },
+    defaultValues: { name: "", price: "", description: "", duration: "30" },
   });
 
   const create = useCreateService();
 
-  const onSubmit = (values: ServiceForm) => {
+  const onSubmit = (values: ServiceValues) => {
     create.mutate(
       { ...values },
       {
@@ -77,11 +72,11 @@ export const CreateServiceForm = () => {
                   <FormLabel>Preço (R$)</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
-                      step="1"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="Ex.: 45,00"
+                      autoComplete="off"
                       {...field}
-                      value={field.value ?? 0}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
                     />
                   </FormControl>
                   <FormMessage />
@@ -96,12 +91,7 @@ export const CreateServiceForm = () => {
                 <FormItem>
                   <FormLabel>Duração (min)</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      value={field.value ?? 30}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                    />
+                    <Input type="text" inputMode="numeric" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -122,6 +112,17 @@ export const CreateServiceForm = () => {
               )}
             />
 
+            {create.isError && (
+              <p role="alert" className="text-sm text-destructive">
+                Não foi possível criar o serviço. Seus dados foram mantidos;
+                tente novamente.
+              </p>
+            )}
+            {create.isSuccess && (
+              <p role="status" className="text-sm">
+                Serviço criado.
+              </p>
+            )}
             <Button
               type="submit"
               className="w-full"
