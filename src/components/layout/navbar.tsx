@@ -54,6 +54,10 @@ export const Navbar = ({ isAuthenticated, onLogout }: NavbarProps) => {
                   </Link>
                 </Button>
 
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/assistant">Assistente</Link>
+                </Button>
+
                 {/* avatar + dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
