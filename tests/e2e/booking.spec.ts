@@ -14,7 +14,8 @@ const service = {
   barberShopId: shop.id,
 };
 const slot = "2030-10-21T12:00:00.000Z";
-async function setup(page: Page, role = "client") {
+async function setup(page: Page, role = "client", now = "2030-10-15T12:00:00.000Z") {
+  await page.clock.setFixedTime(new Date(now));
   const requests: { method: string; path: string; body: unknown }[] = [];
   let status = "scheduled";
   await page.addInitScript(() => localStorage.setItem("token", "booking-test"));
@@ -424,4 +425,53 @@ test("barbeiro vinculado configura disponibilidade própria sem acesso à gestã
   });
   await page.goto("/barber-shop/shop-1");
   await expect(page.getByRole("alert")).toContainText("não pode gerenciar");
+});
+
+for (const scenario of [
+  {
+    name: "exatamente 24 horas",
+    now: "2030-10-20T12:00:00.000Z",
+    allowed: true,
+  },
+  {
+    name: "menos de 24 horas",
+    now: "2030-10-20T12:00:00.001Z",
+    allowed: false,
+  },
+]) {
+  test(`cancelamento pelo cliente: ${scenario.name}`, async ({ page }) => {
+    const requests = await setup(page, "client", scenario.now);
+    await page.goto("/appointments");
+    const cancel = page.getByRole("button", { name: "Cancelar", exact: true });
+    if (scenario.allowed) {
+      await expect(cancel).toBeEnabled();
+      await cancel.click();
+      await page
+        .getByRole("button", { name: "Confirmar cancelamento" })
+        .click();
+      await expect(page.getByText("cancelled", { exact: true })).toBeVisible();
+    } else {
+      await expect(cancel).toBeDisabled();
+      await expect(
+        page.getByText(/O prazo para cancelamento pelo cliente terminou/),
+      ).toBeVisible();
+      expect(requests.some((request) => request.method === "PATCH")).toBe(
+        false,
+      );
+    }
+  });
+}
+
+test("cancelamento revalida o prazo quando a confirmação fica aberta", async ({
+  page,
+}) => {
+  const requests = await setup(page, "client", "2030-10-20T11:59:59.000Z");
+  await page.goto("/appointments");
+  await page.getByRole("button", { name: "Cancelar", exact: true }).click();
+  await page.clock.setFixedTime(new Date("2030-10-20T12:00:00.001Z"));
+  await page.getByRole("button", { name: "Confirmar cancelamento" }).click();
+  await expect(
+    page.getByText(/O prazo para cancelamento pelo cliente terminou/),
+  ).toBeVisible();
+  expect(requests.some((request) => request.method === "PATCH")).toBe(false);
 });

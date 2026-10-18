@@ -62,6 +62,12 @@ export function BookingForm({
       <h2 className="text-xl font-semibold">
         {appointmentId ? "Remarcar agendamento" : "Escolha serviço e horário"}
       </h2>
+      <p className="text-sm text-slate-600">
+        Reservas e remarcações exigem pelo menos 30 minutos de antecedência, com
+        limite de 60 dias. Os horários de início seguem uma grade de 30 minutos
+        no fuso da barbearia. Clientes podem cancelar até 24 horas antes do
+        início.
+      </p>
       {services.isLoading && <p>Carregando serviços…</p>}
       {services.isError && (
         <p role="alert">

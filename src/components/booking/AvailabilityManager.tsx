@@ -162,6 +162,11 @@ function AvailabilityEditor({
         Expediente semanal no fuso {timezone}. Sem intervalos, a agenda fica
         fechada. Você pode adicionar mais de um intervalo por dia.
       </p>
+      <p className="text-sm text-slate-600">
+        Alterações no expediente e novas folgas preservam as reservas
+        existentes. Elas afetam apenas a disponibilidade para novas reservas e
+        remarcações.
+      </p>
       <form
         onSubmit={(e) => {
           e.preventDefault();
