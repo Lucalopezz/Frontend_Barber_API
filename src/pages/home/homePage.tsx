@@ -8,7 +8,7 @@ export const HomePage = () => {
     <section className="container mx-auto px-4 pt-16">
       <div className="flex justify-center">
         {userData?.role === "client" && <HomeClient />}
-        {userData?.role === "barber" && <HomeBarber user={userData} />}
+        {(userData?.role === "barber" || userData?.role === "owner") && <HomeBarber user={userData} />}
       </div>
     </section>
   );

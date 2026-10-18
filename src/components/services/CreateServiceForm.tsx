@@ -19,7 +19,7 @@ import { Textarea } from "../ui/textarea";
 const ServiceSchema = z.object({
   name: z.string().min(2, "Nome muito curto"),
   price: z.number().min(0, "Preço inválido"),
-  description: z.string().optional(),
+  description: z.string().min(1, "Informe a descrição"),
   duration: z.number().min(1, "Duração inválida (minutos)"),
 });
 
@@ -115,7 +115,7 @@ export const CreateServiceForm = () => {
                 <FormItem>
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
-                    <Textarea {...field} placeholder="Opcional" />
+                    <Textarea {...field} placeholder="Descreva o serviço" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

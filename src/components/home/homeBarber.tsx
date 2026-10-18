@@ -19,15 +19,13 @@ export const HomeBarber = ({ user }: { user: User }) => {
 
   const { mutate: createShop, isPending } = useCreateBarberShop();
   const handleAddShop = (shop: CreateAndUpdateBarberShopType) => {
-    try {
-      createShop(shop);
-      showToast("Barbearia criada com sucesso!");
-    } catch (error) {
-      console.error(error);
-      showToast("Erro ao criar barbearia", "error");
-    }
-
-    setIsDialogOpen(false);
+    createShop(shop, {
+      onSuccess: () => {
+        showToast("Barbearia criada com sucesso!");
+        setIsDialogOpen(false);
+      },
+      onError: () => showToast("Erro ao criar barbearia", "error"),
+    });
   };
 
   const navigate = useNavigate();

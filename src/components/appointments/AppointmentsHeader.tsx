@@ -8,7 +8,7 @@ export const AppointmentsHeader = ({ role }: { role?: Role }) => {
       <div>
         <h1 className="text-2xl font-semibold">Agendamentos</h1>
         <p className="text-sm text-muted-foreground">
-          {role === "barber"
+          {(role === "barber" || role === "owner")
             ? "Gerencie os atendimentos da sua barbearia"
             : "Crie e gerencie seus agendamentos"}
         </p>

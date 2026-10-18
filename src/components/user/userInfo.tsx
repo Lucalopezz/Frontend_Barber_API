@@ -55,7 +55,7 @@ export const UserInfo = ({ data, isLoading, error }: UserInfoProps) => {
           <BadgeCheck size={18} className="text-slate-700" />
           <p className="text-gray-700 text-sm">
             <span className="font-semibold">Tipo de conta:</span>{" "}
-            {data.role === "barber" ? "Barbeiro" : "Cliente"}
+            {data.role === "owner" ? "Proprietário" : data.role === "barber" ? "Barbeiro" : "Cliente"}
           </p>
         </div>
 

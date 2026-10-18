@@ -2,25 +2,20 @@ import type { LoginData } from "@/pages/auth/types/login.types";
 import type { RegisterData } from "@/pages/auth/types/register.types";
 import api from "@/utils/api";
 import { showToast } from "@/utils/toast";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AxiosError } from "axios";
+import { useQueryClient } from "@tanstack/react-query";
 
 type LoginToken = {
   accessToken: string;
 };
 
 export function useAuth() {
-  const [authenticated, setAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      api.defaults.headers.Authorization = `Bearer ${token}`;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setAuthenticated(true);
-    }
-    setLoading(false);
-  }, []);
+  const [authenticated, setAuthenticated] = useState(
+    () => !!localStorage.getItem("token"),
+  );
+  const queryClient = useQueryClient();
+  const loading = false;
 
   async function register(data: RegisterData) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -41,8 +36,10 @@ export function useAuth() {
   }
 
   async function authUser(data: LoginToken) {
-    setAuthenticated(true);
+    queryClient.clear();
     localStorage.setItem("token", data.accessToken);
+    api.defaults.headers.Authorization = `Bearer ${data.accessToken}`;
+    setAuthenticated(true);
   }
 
   async function login(loginData: LoginData) {
@@ -67,6 +64,7 @@ export function useAuth() {
     setAuthenticated(false);
     localStorage.removeItem("token");
     api.defaults.headers.Authorization = "";
+    queryClient.clear();
     showToast("Logout realizado com sucesso!");
   }
 

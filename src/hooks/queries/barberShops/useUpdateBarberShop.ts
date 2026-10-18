@@ -7,7 +7,7 @@ export const useUpdateBarberShop = (shopId: string) => {
 
   return useMutation({
     mutationFn: async (data: { name: string; address: string }) => {
-      const response = await api.put(`/barber-shop/${shopId}`, data, {
+      const response = await api.put(`/barber-shops/${shopId}`, data, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -18,6 +18,7 @@ export const useUpdateBarberShop = (shopId: string) => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["barber-shop"] });
+      queryClient.invalidateQueries({ queryKey: ["barber-shops"] });
     },
   });
 };

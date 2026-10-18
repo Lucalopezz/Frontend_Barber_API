@@ -7,7 +7,7 @@ export const useDeleteBarberShop = (shopId: string) => {
 
   return useMutation({
     mutationFn: async () => {
-      const response = await api.delete(`/barber-shop/${shopId}`, {
+      const response = await api.delete(`/barber-shops/${shopId}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },

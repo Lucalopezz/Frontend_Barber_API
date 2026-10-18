@@ -7,7 +7,7 @@ export const useCancelAppointment = (appointmentId: string) => {
 
   return useMutation({
     mutationFn: async () => {
-      await api.delete(`/appointments/${appointmentId}`, {
+      await api.patch(`/appointments/${appointmentId}`, { newStatus: "cancelled" }, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },

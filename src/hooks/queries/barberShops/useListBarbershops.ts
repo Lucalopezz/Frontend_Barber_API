@@ -24,7 +24,7 @@ export const useListBarberShops = (params: ListBarberShopsParams) => {
   return useQuery<ListBarberShopsReturn>({
     queryKey: ["barber-shops", params],
     queryFn: async () => {
-      const { data } = await api.get("/barber-shop", {
+      const { data } = await api.get("/barber-shops", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

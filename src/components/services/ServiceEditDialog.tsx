@@ -20,7 +20,7 @@ import { useUpdateService } from "@/hooks/queries/services/useUpdateService";
 const ServiceSchema = z.object({
   name: z.string().min(2),
   price: z.number().min(0),
-  description: z.string().optional(),
+  description: z.string().min(1, "Informe a descrição"),
   duration: z.number().min(1),
 });
 type ServiceForm = z.infer<typeof ServiceSchema>;
@@ -74,7 +74,7 @@ export const ServiceEditDialog = ({ service }: { service: Service }) => {
                 <FormItem>
                   <FormLabel>Preço (R$)</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" {...field} />
+                    <Input type="number" step="0.01" {...field} onChange={(event) => field.onChange(Number(event.target.value))} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -88,7 +88,7 @@ export const ServiceEditDialog = ({ service }: { service: Service }) => {
                 <FormItem>
                   <FormLabel>Duração (min)</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input type="number" {...field} onChange={(event) => field.onChange(Number(event.target.value))} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

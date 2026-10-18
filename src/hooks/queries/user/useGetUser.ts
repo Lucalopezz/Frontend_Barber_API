@@ -7,7 +7,7 @@ export const useGetUser = () => {
   return useQuery<User>({
     queryKey: ["user"],
     queryFn: async () => {
-      const { data } = await api.get("/users/get-one", {
+      const { data } = await api.get("/users/me", {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },

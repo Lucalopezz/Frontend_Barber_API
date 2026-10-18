@@ -29,7 +29,7 @@ export const useListAppointments = (params: ListAppointmentsParams) => {
   const accessToken = localStorage.getItem("token");
 
   return useQuery<ListAppointmentsReturn>({
-    queryKey: ["appointments"],
+    queryKey: ["appointments", params],
     queryFn: async () => {
       const { data } = await api.get("/appointments", {
         headers: {
@@ -37,8 +37,7 @@ export const useListAppointments = (params: ListAppointmentsParams) => {
         },
         params: params,
       });
-      console.log(data);
-      return data || [];
+      return data;
     },
     enabled: !!accessToken,
   });

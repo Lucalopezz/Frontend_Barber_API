@@ -20,7 +20,7 @@ export const ShopManagementPage = () => {
 
       <ShopUpdateForm shop={data} />
 
-      <ShopServices />
+      <ShopServices barberShopId={data.id} />
 
       <ShopDangerZone shop={data} />
     </div>

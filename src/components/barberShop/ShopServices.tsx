@@ -4,8 +4,8 @@ import type { Service } from "@/types/services.type";
 import { CreateServiceForm } from "../services/CreateServiceForm";
 import { ServiceList } from "../services/ServiceList";
 
-export const ShopServices = () => {
-  const { data, isLoading } = useListServices();
+export const ShopServices = ({ barberShopId }: { barberShopId: string }) => {
+  const { data, isLoading } = useListServices(barberShopId);
 
   const services: Service[] = data?.data ?? [];
 

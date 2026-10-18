@@ -34,7 +34,6 @@ export const CreateBarberShopDialog = ({
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors },
   } = useForm<z.infer<typeof BarberShopSchema>>({
     resolver: zodResolver(BarberShopSchema),
@@ -46,8 +45,6 @@ export const CreateBarberShopDialog = ({
 
   const handleFormSubmit = (data: CreateAndUpdateBarberShopType) => {
     onSubmit(data);
-    reset();
-    onOpenChange(false);
   };
 
   return (
@@ -122,6 +119,7 @@ export const CreateBarberShopDialog = ({
             </Button>
             <Button
               type="submit"
+              disabled={loading}
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               {loading ? "Carrgando" : "Salvar"}

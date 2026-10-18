@@ -6,9 +6,9 @@ export const useGetBarberShop = (id?: string) => {
   const token = localStorage.getItem("token");
 
   return useQuery<BarberShop>({
-    queryKey: ["barber-shop"],
+    queryKey: ["barber-shop", id],
     queryFn: async () => {
-      const { data } = await api.get(`/barber-shop/${id}`, {
+      const { data } = await api.get(`/barber-shops/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

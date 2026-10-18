@@ -6,17 +6,18 @@ interface ListServicesReturn {
   data: Service[];
 }
 
-export const useListServices = () => {
+export const useListServices = (barberShopId: string) => {
   const token = localStorage.getItem("token");
 
   return useQuery<ListServicesReturn>({
-    queryKey: ["services"],
+    queryKey: ["services", barberShopId],
     queryFn: async () => {
       const { data } = await api.get("/services", {
         headers: { Authorization: `Bearer ${token}` },
+        params: { barberShopId },
       });
       return data;
     },
-    enabled: !!token,
+    enabled: !!token && !!barberShopId,
   });
 };

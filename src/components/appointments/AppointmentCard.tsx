@@ -40,7 +40,7 @@ export const AppointmentCard = ({
         <AppointmentActionsClient appointment={appointment} />
       )}
 
-      {role === "barber" && (
+      {(role === "barber" || role === "owner") && (
         <AppointmentActionsBarber appointment={appointment} />
       )}
     </div>

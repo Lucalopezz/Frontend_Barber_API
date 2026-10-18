@@ -7,4 +7,4 @@ export interface User {
 }
 
 export const ROLES = ["barber", "client"] as const;
-export type Role = (typeof ROLES)[number];
+export type Role = (typeof ROLES)[number] | "owner";

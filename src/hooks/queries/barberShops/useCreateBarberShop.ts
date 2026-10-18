@@ -7,7 +7,7 @@ export const useCreateBarberShop = () => {
 
   return useMutation({
     mutationFn: async (data: { name: string; address: string }) => {
-      const response = await api.post(`/barber-shop`, data, {
+      const response = await api.post(`/barber-shops`, data, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -18,6 +18,7 @@ export const useCreateBarberShop = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["barber-shops"] });
+      queryClient.invalidateQueries({ queryKey: ["user"] });
     },
   });
 };

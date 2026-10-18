@@ -1,4 +1,4 @@
-import { ROLES, type User } from "@/types/user.type";
+import type { User } from "@/types/user.type";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import z from "zod";
@@ -11,13 +11,6 @@ import {
 } from "../ui/form";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
 import { Button } from "../ui/button";
 import { Send } from "lucide-react";
 import { useUpdateUser } from "@/hooks/queries/user/useUpdateUser";
@@ -25,7 +18,6 @@ import { showToast } from "@/utils/toast";
 
 const updateUserSchema = z.object({
   name: z.string().min(2, { message: "Nome muito curto" }).max(255),
-  role: z.enum(ROLES, { message: "Cargo inválida" }),
 });
 
 export type UpdateUserData = z.infer<typeof updateUserSchema>;
@@ -38,7 +30,6 @@ export const UpdateUserForm = ({ user }: { user: User | undefined }) => {
     values: user
       ? {
           name: user.name,
-          role: user.role,
         }
       : undefined,
     resolver: zodResolver(updateUserSchema),
@@ -70,32 +61,6 @@ export const UpdateUserForm = ({ user }: { user: User | undefined }) => {
                     {...field}
                     autoComplete="Seu nome"
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="role"
-            render={({ field }) => (
-              <FormItem>
-                <Label className="text-sm">Cargo</Label>
-                <FormControl>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione um cargo" />
-                    </SelectTrigger>
-
-                    <SelectContent>
-                      <SelectItem value="client">Cliente</SelectItem>
-                      <SelectItem value="barber">Barbeiro</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </FormControl>
                 <FormMessage />
               </FormItem>

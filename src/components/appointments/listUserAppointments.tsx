@@ -98,7 +98,7 @@ export const ListUserAppointments = ({ user }: { user: User | undefined }) => {
 
               <p className="text-gray-700 flex items-center gap-2 mt-1">
                 <UserCircle2 size={16} />
-                {user?.role === "barber"
+                {(user?.role === "barber" || user?.role === "owner")
                   ? "Atendimento da barbearia"
                   : "Seu agendamento"}
               </p>
