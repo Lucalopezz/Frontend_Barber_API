@@ -1,4 +1,3 @@
-import { AssistantPage } from "@/pages/assistant/assistant";
 import { BookAppointment } from "@/pages/appointments/book";
 import { App } from "@/App";
 import { ErrorComponent } from "@/components/layout/errorComponent";
@@ -19,14 +18,6 @@ export const routes = createBrowserRouter([
     element: <App />,
     errorElement: <ErrorComponent />,
     children: [
-      {
-        path: "/assistant",
-        element: (
-          <PrivateRoute>
-            <AssistantPage />
-          </PrivateRoute>
-        ),
-      },
       {
         path: "/book/:id",
         element: (

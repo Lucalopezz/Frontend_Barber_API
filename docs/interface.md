@@ -23,13 +23,15 @@ Celular: [marca                              conta]
 
 Uma ação principal por seção. Rótulos em português; estados de agendamento traduzidos. Políticas aparecem onde ajudam a decidir, com detalhes expansíveis. Não prometer favoritos, avaliações, notificações ou profissionais selecionáveis que o produto não implementa.
 
-O assistente é um experimento opcional para aprender seleção de ferramentas de leitura e avaliações. Continua acessível pela conta, identificado como simulação, fora da navegação principal. Dados técnicos ficam sob expansão explícita. Consulta por pergunta não é necessária para agendar: a jornada principal usa catálogo → serviço → data → horário.
+O assistente experimental foi removido, incluindo o acesso pela conta e a tela. A jornada principal usa catálogo → serviço → data → horário. O endereço antigo `/assistant` usa o tratamento existente de página inexistente.
 
 ## Verificação
 
 Bugs exigem RED/GREEN observado e regressões versionadas. Telas usam a exceção visual autorizada: implementação seguida de revisão em navegador e testes. Conferir 360/390 px, tablet e desktop, menu/diálogos, foco, nomes longos e rolagem horizontal; executar lint/build, suíte Playwright e jornadas reais quando ambos os projetos e banco estiverem disponíveis.
 
 ## Resultado da entrega
+
+> Histórico da repaginação anterior à remoção do assistente. Telas, contagens de testes e comandos desta seção registram aquela entrega; o assistente e seus testes exclusivos não integram mais a aplicação atual.
 
 Implementados catálogo, área profissional, autenticação, agenda, gestão, perfil, ajuda e assistente na identidade comum. Preço de serviço agora usa texto durante a edição, aceita vírgula/ponto com até duas casas decimais e converte no envio: vazio é obrigatório, zero explícito continua permitido. Duração também preserva digitação vazia antes de validar. Criação/edição mostram sucesso/erro. Aviso de exclusão foi alinhado ao backend: não exclui o perfil do dono.
 

@@ -90,7 +90,6 @@ for (const width of [360, 768, 1440]) {
       ["/barber-shop/shop-1", "Gerenciar Barbearia", "management"],
       ["/appointments", "Agendamentos", "appointments"],
       ["/profile", "Minha conta", "profile"],
-      ["/assistant", "Assistente de consultas", "assistant"],
     ]) {
       await page.goto(path);
       await expect(
@@ -133,7 +132,7 @@ for (const width of [360, 768, 1440]) {
       await expect(page).toHaveURL(/\/appointments$/);
       await page.getByRole("button", { name: "Abrir menu da conta" }).click();
       await expect(
-        page.getByRole("menuitem", { name: "Assistente experimental" }),
+        page.getByRole("menuitem", { name: "Meu Perfil" }),
       ).toBeVisible();
     }
   });

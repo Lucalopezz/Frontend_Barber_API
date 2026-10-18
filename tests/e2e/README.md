@@ -2,6 +2,8 @@
 
 A suíte abre a aplicação no Chromium e intercepta todas as chamadas de API. Usa contas e tokens fictícios, sem API, Docker ou banco de dados.
 
+No GitHub Actions, [Frontend CI](../../.github/workflows/ci.yml) executa lint, build e toda esta suíte com dois workers em pull requests e pushes na `main`. Usa zero retries e rejeita testes exclusivos (`test.only`). Traces de falhas são publicados por sete dias; consulte [o procedimento de CI e investigação](../../docs/ci-frontend.md). A integração real é uma entrega separada.
+
 ```bash
 pnpm install --frozen-lockfile
 pnpm exec playwright install chromium
@@ -26,4 +28,6 @@ As respostas atrasadas são controladas por promises nos testes. Não dependem d
 
 PS (18/10/2026): a suíte também cobre jornada de agendamento, falhas de mutações sem falso sucesso, conflito 409, paginação de lojas/serviços/agendamentos, gestão do dono, disponibilidade do profissional vinculado, edição parcial de expediente e conversão de fuso/DST. A integração real fica em `../integration/README.md` e usa `pnpm test:integration`.
 
-PS (assistente e políticas): `assistant.spec.ts` cobre acesso autenticado, modo simulado explícito, contexto e fontes retornadas pela API, falha com nova tentativa, bloqueio de reenvio, isolamento entre sessões com resposta atrasada, texto não executável e navegação mobile. O histórico é somente local à tela. `booking.spec.ts` congela o relógio para manter as reservas no futuro e testa cancelamento pelo cliente exatamente a 24 horas, um milissegundo depois do limite e prazo expirando com a confirmação aberta. As regras de antecedência (30 minutos), horizonte (60 dias), grade (30 minutos) e preservação de reservas ao alterar disponibilidade são informadas pela interface; a API continua a autoridade dessas regras.
+Remoção do assistente: a suíte exclusiva `assistant.spec.ts` foi retirada junto da tela. `assistant-removal.spec.ts` verifica ausência de acesso no menu e navegação em desktop/mobile, preservação do acesso a agendamentos e tratamento da antiga URL `/assistant` pelo fallback existente, com e sem autenticação.
+
+Políticas: `booking.spec.ts` congela o relógio para manter as reservas no futuro e testa cancelamento pelo cliente exatamente a 24 horas, um milissegundo depois do limite e prazo expirando com a confirmação aberta. As regras de antecedência (30 minutos), horizonte (60 dias), grade (30 minutos) e preservação de reservas ao alterar disponibilidade são informadas pela interface; a API continua a autoridade dessas regras.

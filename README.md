@@ -7,6 +7,8 @@
 > preservada abaixo. Veja o [ambiente e estado atual](./docs/estado-atual.md)
 > para executar com pnpm e conhecer as limitações reais.
 
+O [CI do frontend](./docs/ci-frontend.md) automatiza lint, build e testes de interface com API controlada em pull requests e pushes na `main`. A integração com API/PostgreSQL reais tem [procedimento próprio](./tests/integration/README.md).
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
@@ -79,8 +81,14 @@ export default defineConfig([
 ])
 ```
 
-## PS — políticas e assistente de consultas
+## Políticas de agendamento
 
-O laboratório agora inclui `/assistant`, autenticado e identificado como **Modo simulado**, para consultar catálogo, serviços e horários por ferramentas reais. Não há modelo generativo nem operações de escrita no assistente. A jornada de reservas aplica antecedência de 30 minutos a 60 dias, grade local de 30 minutos e cancelamento pelo cliente até 24 horas antes. Folgas/expediente preservam reservas existentes. Os contratos, limites e relatório completo ficam em `../Projeto_Barber_API/docs/assistant/simulador.md` e `../Projeto_Barber_API/docs/entrega-politicas-assistente.md` no workspace com ambos os projetos.
+A jornada de reservas aplica antecedência de 30 minutos a 60 dias, grade local de 30 minutos e cancelamento pelo cliente até 24 horas antes. Folgas/expediente preservam reservas existentes. O assistente experimental foi removido: não há mais tela, navegação ou integração com `/api/v1/assistant/chat`. O endereço antigo `/assistant` segue o tratamento existente de página inexistente. Catálogo, serviços e agendamento permanecem disponíveis pelas telas próprias.
+
+## Histórico — políticas e assistente de consultas
+
+> Registro da entrega anterior, preservado como evidência histórica. O assistente e seus testes exclusivos foram removidos posteriormente; os resultados abaixo não descrevem a suíte atual.
+
+O laboratório incluía `/assistant`, autenticado e identificado como **Modo simulado**, para consultar catálogo, serviços e horários por ferramentas reais. Não havia modelo generativo nem operações de escrita no assistente. Os contratos, limites e relatório histórico ficam em `../Projeto_Barber_API/docs/assistant/simulador.md` e `../Projeto_Barber_API/docs/entrega-politicas-assistente.md` no workspace com ambos os projetos.
 
 Validação desta entrega no checkout integrado: lint/build, **32 cenários de interface** e **2 jornadas com API/PostgreSQL reais** aprovados. A revisão independente encontrou e corrigiu contexto antigo ao paginar lojas no assistente; regressões permanentes cobrem paginação, perguntas apenas com espaços e prazo de cancelamento. A tela usou a exceção de testes após implementação visual; as correções de bugs observaram RED/GREEN.

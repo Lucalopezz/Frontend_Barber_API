@@ -40,4 +40,4 @@ Esta entrega criou instruções/referências e fez uma correção de formataçã
 
 Logs temporários desta avaliação ficam em `/tmp/barber-step3` e podem desaparecer. Os comandos reproduzíveis ficam nas referências da própria skill. A avaliação não demonstra todos os ambientes possíveis: Docker sem permissão, download de Chromium e lockfile divergente não foram simulados; a skill orienta relatar esses bloqueios sem usar privilégios ou alterar o lock automaticamente.
 
-O próximo passo da sequência é o assistente com ferramentas para consultar catálogo/horários e avaliações fixas. Refresh token e cache continuam no backlog de estudos futuros; não foram implementados nesta etapa.
+Naquela sequência, o próximo passo era o assistente com ferramentas para consultar catálogo/horários e avaliações fixas. Ele foi implementado e removido posteriormente por decisão de produto; esta validação de setup permanece como registro histórico. Refresh token e cache não foram implementados nesta etapa.

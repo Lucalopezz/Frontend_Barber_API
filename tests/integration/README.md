@@ -30,6 +30,6 @@ O runner inicia e encerra seus servidores nas portas 3002 e 5175, que precisam e
 
 Cenários: dono cria loja/serviço sem refazer login, configura expediente e folga; cliente pesquisa catálogo e agenda; conflito concorrente devolve 409 e atualiza horários; isolamento entre clientes; cancelamento; dono remarca e conclui. Navegador em UTC e loja em São Paulo verificam a conversão do horário. Traces de falhas ficam ignorados pelo Git e podem conter dados de sessão.
 
-## PS — assistente simulado
+## Histórico — assistente simulado removido
 
-`assistant.real.spec.ts` cobre a tela autenticada com catálogo, serviços e disponibilidade reais, incluindo slot ocupado, navegador em UTC/loja em São Paulo e recusa de escrita sem alterar reservas. O teste cria fixtures únicas e remove somente seus registros no schema isolado. O simulador não chama provedor externo. Execute junto da jornada de agendamento pelo mesmo `pnpm test:integration`, sequencialmente e sem suítes da API concorrendo pelo schema.
+O antigo `assistant.real.spec.ts` cobria consultas de catálogo, serviços e disponibilidade sem escrita. Foi removido junto da funcionalidade. A jornada real de agendamento em `booking.real.spec.ts` permanece ativa, com os mesmos requisitos de banco e execução sequencial descritos acima.
