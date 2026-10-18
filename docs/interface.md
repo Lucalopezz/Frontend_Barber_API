@@ -40,3 +40,21 @@ Validação final: lint/build aprovados e 44 testes de interface aprovados. Os s
 Limite: testes de responsividade foram executados no Chromium, sem comprovar comportamento em um aparelho físico ou Safari. O assistente continua sendo um simulador de consultas, sem modelo generativo. A explicação do experimento e os dados técnicos são opcionais; a navegação de agendamento não depende dele.
 
 As duas jornadas com API/PostgreSQL reais também passaram: cadastro de loja/serviço, expediente/folga, reserva/conflito/cancelamento/remarcação/conclusão e consulta do assistente sem escrita. Foram executadas depois da suíte de interface para não disputar artefatos do Playwright.
+
+## Versionamento
+
+Implementação isolada em `.worktrees/interface-refresh`, branch `feat/interface-refresh`, integrada por fast-forward após a validação. Commits locais: `c4aa65a` (skill), `b8d9ddf` (formulários/avisos) e `a46ca95` (repaginação). Nenhum push foi feito nesta entrega.
+
+Comandos de agrupamento por feature, para referência; as mudanças já estão commitadas:
+
+```bash
+# Skill
+ git add .agents/README.md .agents/skills-lock.json .agents/skills/frontend-design AGENTS.md
+ git commit -m "chore(skills): add pinned frontend design guidance"
+# Formulários e regressões
+ git add src/components/services/CreateServiceForm.tsx src/components/services/ServiceEditDialog.tsx src/components/services/service-form.ts src/components/ui/form.tsx src/components/barberShop/ShopDangerZone.tsx tests/e2e/service-price.spec.ts
+ git commit -m "fix(forms): preserve empty prices and explain service outcomes"
+# Interface, assets e jornadas
+ git add src index.html tests/e2e/assistant.spec.ts tests/e2e/auth.spec.ts tests/e2e/booking.spec.ts tests/e2e/responsive.spec.ts tests/integration/assistant.real.spec.ts tests/integration/booking.real.spec.ts docs/interface.md
+ git commit -m "feat(ui): refresh barber identity and responsive journeys"
+```
