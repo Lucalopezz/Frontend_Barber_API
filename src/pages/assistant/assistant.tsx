@@ -51,6 +51,12 @@ function AssistantSession({ token }: { token: string }) {
   const services = useListServices(shopId);
   useEffect(() => () => request.current?.abort(), []);
 
+  function changeCatalogPage(nextPage: number) {
+    setPage(nextPage);
+    setShopId("");
+    setServiceId("");
+  }
+
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     const question = message.trim();
@@ -168,7 +174,7 @@ function AssistantSession({ token }: { token: string }) {
               type="button"
               variant="outline"
               disabled={page <= 1}
-              onClick={() => setPage((value) => value - 1)}
+              onClick={() => changeCatalogPage(page - 1)}
             >
               Barbearias anteriores
             </Button>
@@ -177,7 +183,7 @@ function AssistantSession({ token }: { token: string }) {
               type="button"
               variant="outline"
               disabled={page >= (shops.data?.meta.lastPage ?? 1)}
-              onClick={() => setPage((value) => value + 1)}
+              onClick={() => changeCatalogPage(page + 1)}
             >
               Próximas barbearias
             </Button>

@@ -273,3 +273,61 @@ test("whitespace-only question shows accessible feedback without calling the API
   ).toBeVisible();
   expect(requests).toBe(1);
 });
+
+test("catalog pagination clears hidden shop and service context in both directions", async ({
+  page,
+}) => {
+  const otherShopId = "10000000-0000-4000-8000-000000000002";
+  await page.route("**/barber-shops?*", (route) => {
+    const currentPage = Number(
+      new URL(route.request().url()).searchParams.get("page"),
+    );
+    return respond(route, 200, {
+      data: [
+        {
+          id: currentPage === 1 ? shopId : otherShopId,
+          name: currentPage === 1 ? "Barbearia Estudo" : "Outra barbearia",
+          address: "Rua Estudo",
+        },
+      ],
+      meta: { total: 51, currentPage, lastPage: 2, perPage: 50 },
+    });
+  });
+  await page.route("**/assistant/chat", (route) =>
+    respond(route, 200, {
+      data: {
+        answer: "Selecione uma barbearia e um serviço para consultar horários.",
+        provider: "simulated",
+        toolCalls: [],
+      },
+    }),
+  );
+  await login(page);
+  for (const [selectedShop, direction, targetPage] of [
+    [shopId, "Próximas barbearias", "Página 2"],
+    [otherShopId, "Barbearias anteriores", "Página 1"],
+  ]) {
+    await page.getByLabel("Barbearia", { exact: true }).selectOption(selectedShop);
+    await page.getByLabel("Serviço", { exact: true }).selectOption(serviceId);
+    await page.getByLabel("Data", { exact: true }).fill("2026-12-01");
+    await page.getByLabel("Sua pergunta").fill("Quais horários?");
+    await page.getByRole("button", { name: direction, exact: true }).click();
+    await expect(page.getByText(targetPage, { exact: true })).toBeVisible();
+    await expect(page.getByLabel("Barbearia", { exact: true })).toHaveValue("");
+    await expect(page.getByLabel("Serviço", { exact: true })).toHaveValue("");
+    await expect(page.getByLabel("Serviço", { exact: true })).toBeDisabled();
+    await expect(page.getByLabel("Data", { exact: true })).toHaveValue(
+      "2026-12-01",
+    );
+    await expect(page.getByLabel("Sua pergunta")).toHaveValue("Quais horários?");
+    const request = page.waitForRequest("**/assistant/chat");
+    await page.getByRole("button", { name: "Enviar pergunta" }).click();
+    expect((await request).postDataJSON()).toEqual({
+      message: "Quais horários?",
+      context: { date: "2026-12-01" },
+    });
+    await expect(page.getByRole("log")).toContainText(
+      "Selecione uma barbearia e um serviço para consultar horários.",
+    );
+  }
+});
