@@ -1,6 +1,6 @@
 export type Appointment = {
   id: string;
-  date: Date;
+  date: string;
   status: AppointmentStatus;
   clientId: string;
   serviceId: string;

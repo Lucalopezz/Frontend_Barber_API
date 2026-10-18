@@ -99,3 +99,21 @@ O relatório conjunto e o workflow completo estão em `docs/estado-atual.md` e
 prioridades e exemplos de prompts. Uma boa primeira feature de IA é consultar
 catálogo e horários por ferramentas, com dados sintéticos e avaliação fixa,
 mantendo autorização e disponibilidade sob responsabilidade da API.
+
+## PS — entrega das partes 1 e 2 (18/10/2026)
+
+A base foi atualizada com pnpm: React 19.3.1, Router 7.18.4, Axios 1.20.0 e Vite 7.3.7. A CLI antiga `shadcn-ui`, sem uso, foi removida. `pnpm audit` completo e `--prod` retornaram zero vulnerabilidades reportadas nesta data, sem ignorar avisos. O backend atualizado exige Node >=24.9; o ambiente integrado foi validado com Node 26.12.
+
+A jornada implementada permite pesquisar lojas, selecionar serviço/data/horário, reservar, listar e cancelar. O dono configura expediente/folgas e remarca ou conclui atendimentos. A interface aguarda as mutações antes de indicar sucesso, atualiza horários após conflito 409, mantém o instante retornado pela API e interpreta folgas no fuso da loja. Catálogo, serviços e agendamentos respeitam paginação. A sessão continua válida após criar a loja, pois a API consulta a função atual no banco.
+
+As regressões de autenticação, estado assíncrono, conflitos, permissões, paginação e fuso ficam versionadas em `tests/e2e`. A jornada com API/PostgreSQL reais está em `tests/integration`, executada por `pnpm test:integration`; consulte `tests/integration/README.md` para preparar ambiente e isolamento. Testes visuais usaram a exceção autorizada de implementar tela antes de testar; correções de bugs tiveram RED/GREEN observado.
+
+Três agentes trabalharam em responsabilidades separadas: estabilização do backend, dependências de ambos e jornada frontend. Cada implementação usou branch/worktree própria; após revisão, os patches foram integrados nas cópias principais e verificados juntos. A revisão independente encontrou ajustes adicionais de edição de horário e acesso do profissional vinculado à própria agenda, incluídos nesta entrega.
+
+A aplicação permanece um laboratório incompleto. As próximas entregas propostas são transformar o setup/verificação repetido em skill (parte 3) e implementar assistente com ferramentas de catálogo/horários e avaliações fixas (parte 4). Skills adicionais de documentação, investigação crítica de requisitos (grilling) e plano/spec serão avaliadas na próxima entrega, sem instalação nesta etapa.
+
+Verificação final do frontend: lint e build aprovados; 21 cenários automatizados no Chromium aprovados em `pnpm test:e2e`.
+
+As worktrees desta entrega ficam em `../.worktrees/frontend-booking-journey`, `frontend-dependencies`, `backend-stabilization` e `backend-dependencies`. Foram preservadas para comparação; a integração final e as correções da revisão estão nas cópias principais e devem ser versionadas nelas. Worktrees isolam arquivos e branches, mas o banco é compartilhado: as suítes que limpam o schema de teste foram executadas em sequência.
+
+Resultado integrado final (18/10/2026): 351 testes do backend aprovados (130 unitários, 185 integração, 36 e2e), 21 cenários do frontend e uma jornada completa sem mocks HTTP aprovados. Lint/build aprovados nos dois repositórios. PostgreSQL Docker saudável; frontend em `http://localhost:5173`, API em `http://localhost:3001/api/v1` e Swagger em `http://localhost:3001/docs` durante a entrega. Os servidores são processos locais da sessão; após encerrá-los, use `pnpm start:dev` no backend e `pnpm dev` no frontend.

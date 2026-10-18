@@ -1,62 +1,51 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash } from "lucide-react";
 import type { Appointment } from "@/types/appointment.type";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "../ui/alert-dialog";
 import { useCancelAppointment } from "@/hooks/queries/appointments/useCancelAppointment";
-
 export const AppointmentActionsClient = ({
   appointment,
 }: {
   appointment: Appointment;
 }) => {
-  const deleteMutation = useCancelAppointment(appointment.id);
+  const mutation = useCancelAppointment(appointment.id);
+  const [confirm, setConfirm] = useState(false),
+    [message, setMessage] = useState("");
+  async function cancel() {
+    if (mutation.isPending) return;
+    try {
+      await mutation.mutateAsync();
+      setConfirm(false);
+      setMessage("Agendamento cancelado.");
+    } catch {
+      setMessage("Erro ao cancelar agendamento. Tente novamente.");
+    }
+  }
   return (
-    <div className="flex gap-2 pt-2">
-      <Button size="sm" variant="outline">
-        <Pencil className="w-4 h-4 mr-1" />
-        Editar
-      </Button>
-
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button variant="destructive" className="flex items-center gap-2">
-            <Trash className="h-4 w-4" />
-            Cancelar
+    <div className="space-y-2 pt-2">
+      {!confirm ? (
+        <Button variant="destructive" onClick={() => setConfirm(true)}>
+          Cancelar
+        </Button>
+      ) : (
+        <div role="group" aria-label="Confirmar cancelamento">
+          <p>Deseja cancelar este agendamento?</p>
+          <Button
+            disabled={mutation.isPending}
+            variant="destructive"
+            onClick={cancel}
+          >
+            Confirmar cancelamento
           </Button>
-        </AlertDialogTrigger>
-
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Tem certeza que deseja cancelar o agendamento?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel>Não cancelar</AlertDialogCancel>
-
-            <AlertDialogAction
-              onClick={() => deleteMutation.mutate()}
-              className="bg-red-600 text-white hover:bg-red-700"
-            >
-              Calcelar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          <Button
+            disabled={mutation.isPending}
+            variant="outline"
+            onClick={() => setConfirm(false)}
+          >
+            Não cancelar
+          </Button>
+        </div>
+      )}
+      {message && <p role={mutation.isError ? "alert" : "status"}>{message}</p>}
     </div>
   );
 };

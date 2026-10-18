@@ -23,3 +23,5 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium pnpm test:e2e
 As regressões cobrem labels e autofill; bloqueio de reenvio enquanto o login está pendente; falha e nova tentativa; logout sem notificações duplicadas ou efeitos durante render; restauração após reload e troca de conta; expiração da sessão atual com mensagem após redirecionar; resposta 401 atrasada da conta anterior; e 401 do endpoint público de login sem invalidar a sessão existente.
 
 As respostas atrasadas são controladas por promises nos testes. Não dependem do tempo de resposta de um backend real. Traces de falhas ficam em `test-results/`, ignorado pelo Git; podem conter dados da sessão de teste. Esta suíte não substitui o smoke de integração com a API real.
+
+PS (18/10/2026): a suíte também cobre jornada de agendamento, falhas de mutações sem falso sucesso, conflito 409, paginação de lojas/serviços/agendamentos, gestão do dono, disponibilidade do profissional vinculado, edição parcial de expediente e conversão de fuso/DST. A integração real fica em `../integration/README.md` e usa `pnpm test:integration`.

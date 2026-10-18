@@ -36,13 +36,14 @@ export const AppointmentCard = ({
         </span>
       </div>
 
-      {role === "client" && (
+      {role === "client" && appointment.status === "scheduled" && (
         <AppointmentActionsClient appointment={appointment} />
       )}
 
-      {(role === "barber" || role === "owner") && (
-        <AppointmentActionsBarber appointment={appointment} />
-      )}
+      {(role === "barber" || role === "owner") &&
+        appointment.status === "scheduled" && (
+          <AppointmentActionsBarber appointment={appointment} />
+        )}
     </div>
   );
 };

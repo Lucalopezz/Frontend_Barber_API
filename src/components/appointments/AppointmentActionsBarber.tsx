@@ -1,40 +1,62 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useChangeStatus } from "@/hooks/queries/appointments/useChangeStatus";
 import type { Appointment, AppointmentStatus } from "@/types/appointment.type";
-import { showToast } from "@/utils/toast";
-
+import { BookingForm } from "@/components/booking/BookingForm";
 export const AppointmentActionsBarber = ({
   appointment,
 }: {
   appointment: Appointment;
 }) => {
-  const { mutate, error } = useChangeStatus(appointment.id);
-  const changeStatus = (status: AppointmentStatus) => {
-    mutate({ newStatus: status });
-    if (error) {
-      showToast("Erro ao alterar status do agendamento");
-    } else {
-      showToast("Status do agendamento alterado com sucesso!");
+  const mutation = useChangeStatus(appointment.id);
+  const [message, setMessage] = useState(""),
+    [edit, setEdit] = useState(false);
+  async function changeStatus(status: AppointmentStatus) {
+    if (mutation.isPending) return;
+    setMessage("");
+    try {
+      await mutation.mutateAsync({ newStatus: status });
+      setMessage("Status do agendamento alterado com sucesso!");
+    } catch {
+      setMessage("Erro ao alterar status do agendamento. Tente novamente.");
     }
-  };
-
+  }
   return (
-    <div className="flex gap-2 pt-2">
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => changeStatus("completed")}
-      >
-        Concluir
-      </Button>
-
-      <Button
-        size="sm"
-        variant="destructive"
-        onClick={() => changeStatus("cancelled")}
-      >
-        Cancelar
-      </Button>
+    <div className="space-y-3">
+      <div className="flex gap-2 pt-2">
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={mutation.isPending}
+          onClick={() => changeStatus("completed")}
+        >
+          Concluir
+        </Button>
+        <Button
+          size="sm"
+          variant="destructive"
+          disabled={mutation.isPending}
+          onClick={() => changeStatus("cancelled")}
+        >
+          Cancelar
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={mutation.isPending}
+          onClick={() => setEdit(!edit)}
+        >
+          {edit ? "Fechar remarcação" : "Remarcar"}
+        </Button>
+      </div>
+      {message && <p role={mutation.isError ? "alert" : "status"}>{message}</p>}
+      {edit && (
+        <BookingForm
+          shopId={appointment.barberShopId}
+          appointmentId={appointment.id}
+          initialServiceId={appointment.serviceId}
+        />
+      )}
     </div>
   );
 };

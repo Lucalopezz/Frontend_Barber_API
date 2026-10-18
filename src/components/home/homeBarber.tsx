@@ -1,3 +1,4 @@
+import { AvailabilityManager } from "@/components/booking/AvailabilityManager";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { useListAppointments } from "@/hooks/queries/appointments/useListAppoint
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarDays, Building2, Scissors } from "lucide-react";
 import type { User } from "@/types/user.type";
-import { useListBarberShops } from "@/hooks/queries/barberShops/useListBarbershops";
+
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useState } from "react";
 import type { CreateAndUpdateBarberShopType } from "../barberShop/ShopUpdateForm";
@@ -29,16 +30,11 @@ export const HomeBarber = ({ user }: { user: User }) => {
   };
 
   const navigate = useNavigate();
-  const { data: shopsData, isLoading: shopsLoading } = useListBarberShops({
-    perPage: 9999,
-  });
   const { data: apptData, isLoading: apptLoading } = useListAppointments({
     perPage: 7,
     sort: "date",
     sortDir: "asc",
   });
-
-  const shops = shopsData?.data ?? [];
 
   const appointmentsData = apptData?.data ?? [];
 
@@ -48,9 +44,9 @@ export const HomeBarber = ({ user }: { user: User }) => {
     return dateObj >= today;
   });
 
-  const myShop = shops.find((shop) => shop.ownerId === user?.id);
+  const myShop = user.barberShop;
 
-  if (shopsLoading || apptLoading) {
+  if (apptLoading) {
     return (
       <div className="space-y-6 mt-6">
         <Skeleton className="h-8 w-48" />
@@ -76,12 +72,14 @@ export const HomeBarber = ({ user }: { user: User }) => {
             <p className="font-medium text-lg">{myShop.name}</p>
             <p className="text-gray-600">{myShop.address}</p>
 
-            <Button
-              className="mt-4"
-              onClick={() => navigate(`/barber-shop/${myShop.id}`)}
-            >
-              Gerenciar Barbearia
-            </Button>
+            {myShop.relationship === "owner" && (
+              <Button
+                className="mt-4"
+                onClick={() => navigate(`/barber-shop/${myShop.id}`)}
+              >
+                Gerenciar Barbearia
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -97,6 +95,8 @@ export const HomeBarber = ({ user }: { user: User }) => {
           />
         </Card>
       )}
+
+      {myShop?.relationship === "barber" && <AvailabilityManager />}
 
       <Card className="bg-white shadow-sm">
         <CardHeader>

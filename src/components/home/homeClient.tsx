@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,10 +8,12 @@ import { Search } from "lucide-react";
 import { useListBarberShops } from "@/hooks/queries/barberShops/useListBarbershops";
 
 export const HomeClient = () => {
+  const navigate = useNavigate();
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
 
-  const { data, isLoading } = useListBarberShops({
-    page: 1,
+  const { data, isLoading, isError } = useListBarberShops({
+    page,
     perPage: 20,
     filter: search.length > 0 ? search : undefined,
   });
@@ -30,14 +33,19 @@ export const HomeClient = () => {
         <div className="relative w-full">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
+            aria-label="Buscar barbearia"
             placeholder="Buscar por nome da barbearia..."
             className="pl-8"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
           />
         </div>
       </div>
 
+      {isError && <p role="alert">Erro ao carregar barbearias.</p>}
       {/* Lista */}
       {isLoading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -67,13 +75,41 @@ export const HomeClient = () => {
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground">{shop.address}</p>
 
-                <Button className="w-full" variant="default">
+                <Button
+                  className="w-full"
+                  variant="default"
+                  onClick={() => navigate(`/book/${shop.id}`)}
+                >
                   Agendar
                 </Button>
               </CardContent>
             </Card>
           ))}
         </div>
+      )}
+      {data && data.meta.lastPage > 1 && (
+        <nav
+          aria-label="Páginas de barbearias"
+          className="flex gap-3 items-center"
+        >
+          <Button
+            variant="outline"
+            disabled={page <= 1 || isLoading}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            Anterior
+          </Button>
+          <span>
+            Página {page} de {data.meta.lastPage}
+          </span>
+          <Button
+            variant="outline"
+            disabled={page >= data.meta.lastPage || isLoading}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Próxima
+          </Button>
+        </nav>
       )}
     </div>
   );

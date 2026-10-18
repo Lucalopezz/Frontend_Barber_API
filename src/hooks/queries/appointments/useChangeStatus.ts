@@ -15,8 +15,9 @@ export const useChangeStatus = (appointmentId: string) => {
       });
     },
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["availability"] });
+      await queryClient.invalidateQueries({ queryKey: ["appointments"] });
     },
   });
 };

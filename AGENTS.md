@@ -23,3 +23,5 @@
 - Exceção autorizada: em trabalho visual de telas do frontend, a tela pode ser implementada primeiro e os testes escritos depois, antes de considerar a entrega concluída. Essa exceção não dispensa testes nem a regressão automatizada de bugs.
 - Cubra o comportamento observável, inclusive falhas e estado assíncrono quando relevantes. Evite testes que apenas repetem a implementação. Execute a regressão e as verificações relacionadas após a mudança.
 - Na entrega, informe quais cenários foram cobertos e o resultado das execuções. Só afirme que seguiu TDD se o ciclo RED/GREEN foi realmente observado; registre quando usou a exceção visual.
+
+- A jornada integrada com API e PostgreSQL reais usa `pnpm test:integration`; pré-requisitos e isolamento em `tests/integration/README.md`. Não a execute em paralelo com testes do backend que limpem `barber_api_test`.

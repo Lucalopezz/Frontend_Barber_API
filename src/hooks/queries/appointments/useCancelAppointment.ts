@@ -7,15 +7,20 @@ export const useCancelAppointment = (appointmentId: string) => {
 
   return useMutation({
     mutationFn: async () => {
-      await api.patch(`/appointments/${appointmentId}`, { newStatus: "cancelled" }, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
+      await api.patch(
+        `/appointments/${appointmentId}`,
+        { newStatus: "cancelled" },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
         },
-      });
+      );
     },
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["availability"] });
+      await queryClient.invalidateQueries({
         queryKey: ["appointments"],
       });
     },
