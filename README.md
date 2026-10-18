@@ -78,3 +78,9 @@ export default defineConfig([
   },
 ])
 ```
+
+## PS — políticas e assistente de consultas
+
+O laboratório agora inclui `/assistant`, autenticado e identificado como **Modo simulado**, para consultar catálogo, serviços e horários por ferramentas reais. Não há modelo generativo nem operações de escrita no assistente. A jornada de reservas aplica antecedência de 30 minutos a 60 dias, grade local de 30 minutos e cancelamento pelo cliente até 24 horas antes. Folgas/expediente preservam reservas existentes. Os contratos, limites e relatório completo ficam em `../Projeto_Barber_API/docs/assistant/simulador.md` e `../Projeto_Barber_API/docs/entrega-politicas-assistente.md` no workspace com ambos os projetos.
+
+Validação desta entrega no checkout integrado: lint/build, **32 cenários de interface** e **2 jornadas com API/PostgreSQL reais** aprovados. A revisão independente encontrou e corrigiu contexto antigo ao paginar lojas no assistente; regressões permanentes cobrem paginação, perguntas apenas com espaços e prazo de cancelamento. A tela usou a exceção de testes após implementação visual; as correções de bugs observaram RED/GREEN.
