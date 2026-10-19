@@ -38,3 +38,16 @@ Ainda não é evidência RED/GREEN. O coordenador deve liberar uso exclusivo do 
 - Conta UUID criada e removida pelo cleanup restrito da suíte. Não foi executado reset ou migration nesta etapa.
 - Log: `/tmp/refresh-sessions-baseline-red.log`; trace/artefatos: `/tmp/refresh-sessions-baseline-red-results`, fora do Git.
 - Somente esse cenário foi executado; os outros cinco aguardam o par novo. Ainda não afirmar GREEN nem cobertura integrada aprovada.
+
+## Compatibilidade backend primeiro — jornada original
+
+Em 19/10/2026, após nova liberação exclusiva do schema pelo coordenador:
+
+- API nova: `73ff97f634f09e4bfc91d2329707749f44b56e23`, checkout `.worktrees/refresh-back`, build preparado pelo implementador.
+- Aplicativo frontend anterior: base `31d64dd9b0adf55b0276b7b1155c202e4018ebb2`, checkout `.worktrees/refresh-verification` em `3b47275853709b40bb49b006641ab0937943a114`; alterações desse último commit são somente novos testes/relatório. `booking.real.spec.ts` permanece original.
+- Ambiente conferido: `NODE_ENV=test`, host `localhost`, porta 5450 e schema exatamente `barber_api_test`. Portas 3002/5175 livres antes do runner. Sem migration/reset nesta verificação.
+- Comando: `BARBER_API_DIR=/home/lucaslopes/Projects/barber/.worktrees/refresh-back PLAYWRIGHT_BROWSERS_PATH=/tmp/barber-ci-browsers CI=true pnpm exec playwright test --config playwright.integration.config.ts tests/integration/booking.real.spec.ts --output=/tmp/refresh-back-old-front-results`, Node 24.22.0, overrides herdados de ambiente removidos.
+- **Resultado: 1/1 jornada original aprovada, zero retries**, em 13,2 segundos. Consumidor anterior continua usando login 201 e Bearer; campos extras de sessão não quebraram a jornada de catálogo, configuração de expediente/folga, agendamento, conflito, isolamento, cancelamento, remarcação e conclusão. Cleanup original dos usuários também passou com as novas relações de sessão.
+- Log `/tmp/refresh-back-old-front.log` e diretório de resultados `/tmp/refresh-back-old-front-results`, fora do Git.
+
+Isso comprova a compatibilidade observada com o frontend anterior para a ordem de publicação proposta; não substitui o GREEN das seis novas jornadas com o frontend atualizado.
