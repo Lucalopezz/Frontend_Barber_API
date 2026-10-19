@@ -2,6 +2,7 @@ import { useUser } from "@/hooks/useUser";
 import type { Service } from "@/types/services.type";
 import api from "@/utils/api";
 import { useQuery } from "@tanstack/react-query";
+import { catalogIdentity, catalogKeys, CATALOG_GC_TIME, CATALOG_STALE_TIME } from "@/hooks/queries/catalogCache";
 
 interface ListServicesReturn {
   data: Service[];
@@ -10,12 +11,14 @@ interface ListServicesReturn {
 
 export const useListServices = (barberShopId: string) => {
   const { authenticated } = useUser();
+  const identity = catalogIdentity();
+  const perPage = 50;
   return useQuery<ListServicesReturn>({
-    queryKey: ["services", barberShopId],
+    queryKey: catalogKeys.services(identity, barberShopId, perPage),
     queryFn: async () => {
       async function fetchPage(page: number) {
         const { data } = await api.get<ListServicesReturn>("/services", {
-          params: { barberShopId, page, perPage: 50 },
+          params: { barberShopId, page, perPage },
         });
         return data;
       }
@@ -31,5 +34,7 @@ export const useListServices = (barberShopId: string) => {
       };
     },
     enabled: authenticated && !!barberShopId,
+    staleTime: CATALOG_STALE_TIME,
+    gcTime: CATALOG_GC_TIME,
   });
 };

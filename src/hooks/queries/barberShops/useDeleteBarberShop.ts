@@ -1,6 +1,6 @@
-import { logoutSession } from "@/auth/session";
 import api from "@/utils/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { invalidateServiceCatalog, invalidateShopCatalog } from "@/hooks/queries/catalogCache";
 
 export const useDeleteBarberShop = (shopId: string) => {
   const queryClient = useQueryClient();
@@ -13,11 +13,11 @@ export const useDeleteBarberShop = (shopId: string) => {
     },
 
     onSuccess: () => {
-      void logoutSession();
-      queryClient.invalidateQueries({
-        queryKey: ["barber-shop", "barber-shops", "user"],
-      });
-
+      return Promise.all([
+        invalidateShopCatalog(queryClient),
+        invalidateServiceCatalog(queryClient),
+        queryClient.invalidateQueries({ queryKey: ["user"] }),
+      ]);
     },
   });
 };
