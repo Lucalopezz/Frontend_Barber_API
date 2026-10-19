@@ -1,3 +1,4 @@
+import { mockSession, sessionTokens } from "./session-fixture";
 import { test, expect, type Page, type Route } from "@playwright/test";
 const shop = {
   id: "shop-1",
@@ -22,10 +23,11 @@ async function setup(
   await page.clock.setFixedTime(new Date(now));
   const requests: { method: string; path: string; body: unknown }[] = [];
   let status = "scheduled";
-  await page.addInitScript(() => localStorage.setItem("token", "booking-test"));
+  await mockSession(page, "booking-test");
   await page.route("**/api/v1/**", async (route) => {
     const req = route.request(),
       path = new URL(req.url()).pathname;
+    if (path.includes("/auth/")) return route.fallback();
     requests.push({
       method: req.method(),
       path,
@@ -478,4 +480,124 @@ test("cancelamento revalida o prazo quando a confirmação fica aberta", async (
     page.getByText(/O prazo para cancelamento pelo cliente terminou/),
   ).toBeVisible();
   expect(requests.some((request) => request.method === "PATCH")).toBe(false);
+});
+
+test('rascunho permanece no reload e revalida usuário e disponibilidade',async({page})=>{
+ const requests=await setup(page);await page.goto('/book/shop-1');await selectSlot(page);
+ await page.reload();
+ await expect(page.getByLabel('Serviço',{exact:true})).toHaveValue(service.id);
+ await expect(page.getByLabel('Data',{exact:true})).toHaveValue('2030-10-21');
+ await expect(page.getByRole('button',{name:'09:00',exact:true})).toHaveAttribute('aria-pressed','true');
+ expect(requests.filter(r=>r.path.endsWith('/users/me')).length).toBeGreaterThanOrEqual(2);
+ expect(requests.filter(r=>r.path.endsWith('/availability')).length).toBeGreaterThanOrEqual(2);
+});
+test('resposta perdida reconcilia reserva e não repete a mutação',async({page})=>{
+ await setup(page);let posts=0;
+ await page.route(/\/api\/v1\/appointments(?:\?.*)?$/,route=>{
+  if(route.request().method()==='POST'){posts++;return route.abort('failed');}
+  return respond(route,{data:[{id:'committed',date:slot,clientId:'client',serviceId:service.id,barberShopId:shop.id,status:'scheduled'}],meta:{lastPage:1,total:1}});
+ });
+ await page.goto('/book/shop-1');await selectSlot(page);
+ await page.getByRole('button',{name:'Confirmar agendamento'}).click();
+ await expect(page.getByRole('status')).toContainText('Agendamento confirmado após consultar suas reservas');expect(posts).toBe(1);
+});
+test('resultado incerto bloqueia reenvio inclusive após reload e preserva campos',async({page})=>{
+ await setup(page);let posts=0;
+ await page.route(/\/api\/v1\/appointments(?:\?.*)?$/,route=>{
+  if(route.request().method()==='POST'){posts++;return route.abort('failed');}
+  return respond(route,{data:[],meta:{lastPage:1,total:0}});
+ });
+ await page.goto('/book/shop-1');await selectSlot(page);
+ await page.getByRole('button',{name:'Confirmar agendamento'}).click();
+ await expect(page.getByRole('alert')).toContainText('Não foi possível confirmar');
+ await page.reload();await expect(page.getByLabel('Serviço',{exact:true})).toHaveValue(service.id);
+ await expect(page.getByRole('button',{name:'Confirmar agendamento'})).toBeDisabled();
+ await expect(page.getByRole('link',{name:'Revisar meus agendamentos'})).toBeVisible();expect(posts).toBe(1);
+});
+test('remarcação do profissional com resposta perdida reconcilia pelo ID autorizado',async({page})=>{
+ await setup(page,'owner');let puts=0;
+ await page.route(/\/api\/v1\/appointments(?:\?.*)?$/,route=>respond(route,{data:[{id:'appt-1',date:slot,clientId:'client',serviceId:service.id,barberShopId:shop.id,status:'scheduled'}],meta:{lastPage:1,total:1}}));
+ await page.route('**/api/v1/appointments/appt-1',route=>{if(route.request().method()==='PUT'){puts++;return route.abort('failed');}return route.fallback();});
+ await page.goto('/appointments');await page.getByRole('button',{name:'Remarcar',exact:true}).click();
+ await page.getByLabel('Data',{exact:true}).fill('2030-10-21');await page.getByRole('button',{name:'09:00',exact:true}).click();
+ await page.getByRole('button',{name:'Confirmar remarcação'}).click();
+ await expect(page.getByRole('status')).toContainText('Agendamento confirmado após consultar suas reservas');expect(puts).toBe(1);
+});
+test('falha de renovação anterior ao envio preserva formulário e permite retomar sem falsa incerteza',async({page})=>{
+ await setup(page);let posts=0,offline=true;
+ await page.route('**/api/v1/appointments',route=>{posts++;return respond(route,{data:{id:'new'}});});
+ await page.goto('/book/shop-1');await selectSlot(page);
+ await page.clock.setFixedTime(new Date('2100-01-01T00:00:00Z'));
+ await page.route('**/api/v1/auth/refresh',route=>offline?route.abort('failed'):route.fulfill({json:{accessToken:'recovered',sessionId:'11111111-1111-4111-8111-111111111111',accessTokenExpiresAt:'2101-01-01T00:00:00Z',sessionExpiresAt:'2101-01-02T00:00:00Z'}}));
+ await page.getByRole('button',{name:'Confirmar agendamento'}).click();
+ await expect(page.getByRole('button',{name:'Tentar recuperar sessão'})).toBeVisible();expect(posts).toBe(0);
+ offline=false;await page.getByRole('button',{name:'Tentar recuperar sessão'}).click();
+ await expect(page.getByLabel('Serviço',{exact:true})).toHaveValue(service.id);
+ await expect(page.getByRole('button',{name:'Confirmar agendamento'})).toBeEnabled();
+ await page.getByRole('button',{name:'Confirmar agendamento'}).click();await expect(page.getByRole('status')).toContainText('Agendamento criado');expect(posts).toBe(1);
+});
+test('expiração preserva rascunho até novo login da mesma pessoa e revalida horários',async({page})=>{
+ const requests=await setup(page);await page.goto('/book/shop-1');await selectSlot(page);
+ await page.route('**/api/v1/auth/refresh',route=>route.fulfill({status:401,json:{code:'AUTH_SESSION_INVALID'}}));
+ await page.evaluate(async()=>{const module=await import('/src/auth/session.ts');try{await module.refreshSession('booking-test');}catch{ /* Expiration is observed in the UI. */ }});
+ await expect(page).toHaveURL(/\/login$/);
+ await page.route('**/api/v1/users/login',route=>route.fulfill({status:201,json:sessionTokens('new-login-same-user','22222222-2222-4222-8222-222222222222')}));
+ await page.getByPlaceholder('seu@exemplo.com').fill('same@example.test');await page.getByPlaceholder('••••••••').fill('Password2026!');
+ await page.getByRole('button',{name:'Entrar',exact:true}).click();
+ await expect(page).toHaveURL(/\/book\/shop-1$/);await expect(page.getByLabel('Serviço',{exact:true})).toHaveValue(service.id);
+ await expect(page.getByRole('button',{name:'Confirmar agendamento'})).toBeEnabled();
+ expect(requests.filter(r=>r.path.endsWith('/availability')).length).toBeGreaterThanOrEqual(2);
+});
+test('troca de conta descarta dados do rascunho anterior',async({page})=>{
+ await setup(page);await page.goto('/book/shop-1');await selectSlot(page);
+ await page.route('**/api/v1/users/login',route=>route.fulfill({status:201,json:sessionTokens('new-user')}));
+ await page.route('**/api/v1/users/me',route=>respond(route,{data:{id:'client-b',role:'client',name:'Outra pessoa'}}));
+ await page.goto('/login');await page.getByPlaceholder('seu@exemplo.com').fill('other@example.test');await page.getByPlaceholder('••••••••').fill('Password2026!');
+ await page.getByRole('button',{name:'Entrar',exact:true}).click();await expect(page).toHaveURL(/\/$/);
+ await page.goto('/book/shop-1');await expect(page.getByLabel('Serviço',{exact:true})).toHaveValue('');
+ expect(await page.evaluate(()=>sessionStorage.getItem('barber.booking.draft.v1'))).toBeNull();
+});
+test('reconciliação indisponível não libera reenvio nem declara ausência de reserva',async({page})=>{
+ await setup(page);let posts=0;
+ await page.route(/\/api\/v1\/appointments(?:\?.*)?$/,route=>{if(route.request().method()==='POST')posts++;return route.abort('failed');});
+ await page.goto('/book/shop-1');await selectSlot(page);await page.getByRole('button',{name:'Confirmar agendamento'}).click();
+ await expect(page.getByRole('alert')).toContainText('Não foi possível confirmar');await expect(page.getByRole('button',{name:'Confirmar agendamento'})).toBeDisabled();
+ await page.getByRole('button',{name:'Consultar resultado novamente'}).click();
+ await expect(page.getByRole('alert')).toContainText('Revise seus agendamentos');expect(posts).toBe(1);
+});
+test('401 definitivo antes do POST não deixa falsa incerteza após novo login',async({page})=>{
+ await setup(page);let posts=0;await page.route('**/api/v1/appointments',route=>{posts++;return respond(route,{data:{id:'new'}});});
+ await page.goto('/book/shop-1');await selectSlot(page);await page.clock.setFixedTime(new Date('2100-01-01T00:00:00Z'));
+ await page.route('**/api/v1/auth/refresh',route=>route.fulfill({status:401,json:{code:'AUTH_SESSION_INVALID'}}));
+ await page.getByRole('button',{name:'Confirmar agendamento'}).click();await expect(page).toHaveURL(/\/login$/);expect(posts).toBe(0);
+ await page.route('**/api/v1/users/login',route=>route.fulfill({status:201,json:{...sessionTokens('after-definitive-expiry'),accessTokenExpiresAt:'2101-01-01T00:00:00Z',sessionExpiresAt:'2101-01-02T00:00:00Z'}}));
+ await page.getByPlaceholder('seu@exemplo.com').fill('same@example.test');await page.getByPlaceholder('••••••••').fill('Password2026!');await page.getByRole('button',{name:'Entrar',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Confirmar agendamento'})).toBeEnabled();
+});
+test('callback de tentativa não enviada da conta anterior não regrava rascunho da conta nova indisponível',async({page})=>{
+ await setup(page);await page.goto('/book/shop-1');await selectSlot(page);await page.clock.setFixedTime(new Date('2100-01-01T00:00:00Z'));
+ await page.route('**/api/v1/auth/refresh',route=>route.abort('failed'));
+ await page.evaluate(async()=>{
+  const {default:api}=await import('/src/utils/api.ts');
+  const hold=window as unknown as {oldRequestWaiting?:boolean;releaseOldRequest?:()=>void};
+  let once=true;
+  api.interceptors.response.use(undefined,async error=>{
+   if(once && error?.requestNotSent){once=false;hold.oldRequestWaiting=true;await new Promise<void>(resolve=>{hold.releaseOldRequest=resolve;});}
+   throw error;
+  });
+ });
+ await page.getByRole('button',{name:'Confirmar agendamento'}).click();
+ await expect.poll(()=>page.evaluate(()=>(window as unknown as {oldRequestWaiting?:boolean}).oldRequestWaiting)).toBe(true);
+ await page.evaluate(async()=>{await(await import('/src/auth/session.ts')).logoutSession();});
+ await page.route('**/api/v1/users/login',route=>route.fulfill({status:201,json:{...sessionTokens('account-b'),accessTokenExpiresAt:'2101-01-01T00:00:00Z',sessionExpiresAt:'2101-01-02T00:00:00Z'}}));
+ await page.route('**/api/v1/users/me',route=>respond(route,{data:{id:'client-b',role:'client',name:'Conta B'}}));
+ await page.evaluate(async()=>{await(await import('/src/auth/session.ts')).loginSession({email:'b@example.test',password:'Password2026!'});});
+ await page.evaluate(async()=>{try{await(await import('/src/auth/session.ts')).refreshSession('account-b');}catch{ /* B is unavailable. */ }});
+ await page.evaluate(async()=>{
+  sessionStorage.setItem('barber.booking.draft.v1',JSON.stringify({version:1,userId:'client-b',shopId:'shop-1',serviceId:'private-b',date:'2100-01-10',slot:'2100-01-10T12:00:00Z'}));
+  (window as unknown as {releaseOldRequest:()=>void}).releaseOldRequest();
+  await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+ });
+ await expect.poll(()=>page.evaluate(()=>JSON.parse(sessionStorage.getItem('barber.booking.draft.v1')!).userId)).toBe('client-b');
+ await expect.poll(()=>page.evaluate(()=>JSON.parse(sessionStorage.getItem('barber.booking.draft.v1')!).serviceId)).toBe('private-b');
 });

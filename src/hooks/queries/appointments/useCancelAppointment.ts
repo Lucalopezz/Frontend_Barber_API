@@ -2,7 +2,6 @@ import api from "@/utils/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useCancelAppointment = (appointmentId: string) => {
-  const accessToken = localStorage.getItem("token");
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -11,9 +10,6 @@ export const useCancelAppointment = (appointmentId: string) => {
         `/appointments/${appointmentId}`,
         { newStatus: "cancelled" },
         {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
         },
       );
     },

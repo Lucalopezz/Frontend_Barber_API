@@ -3,14 +3,11 @@ import api from "@/utils/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useCreateService = () => {
-  const token = localStorage.getItem("token");
   const qc = useQueryClient();
 
   return useMutation({
     mutationFn: async (payload: Omit<Service, "id" | "createdAt" | "barberShopId">) => {
-      const { data } = await api.post("/services", payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await api.post("/services", payload);
       return data;
     },
     onSuccess: () => {

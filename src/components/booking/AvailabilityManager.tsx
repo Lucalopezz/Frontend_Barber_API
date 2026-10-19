@@ -1,7 +1,6 @@
 import { shopTimeToIso } from "@/utils/shopTime";
 import { useState } from "react";
 import {
-  authHeaders,
   useBookingMutation,
   useOwnAvailability,
   type Schedule,
@@ -79,7 +78,7 @@ function AvailabilityEditor({
               endMinute: minutes(s.end),
             })),
           },
-          { headers: authHeaders() },
+          { },
         );
       if (action.kind === "add")
         await api.post(
@@ -89,12 +88,12 @@ function AvailabilityEditor({
             endsAt: shopTimeToIso(endsAt, timezone),
             reason,
           },
-          { headers: authHeaders() },
+          { },
         );
       if (action.kind === "delete")
         await api.delete(
           `/appointments/availability/me/time-offs/${action.id}`,
-          { headers: authHeaders() },
+          { },
         );
     },
   );

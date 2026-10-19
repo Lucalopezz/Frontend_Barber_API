@@ -1,3 +1,4 @@
+import { mockSession } from "./session-fixture";
 import { test, expect, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 
@@ -9,11 +10,10 @@ const shop = {
   createdAt: "2026-01-01",
 };
 async function setup(page: Page, role: "client" | "owner") {
-  await page.addInitScript(() =>
-    localStorage.setItem("token", "responsive-test"),
-  );
+  await mockSession(page, "responsive-test");
   await page.route("**/api/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
+    if (path.includes("/auth/")) return route.fallback();
     let data: unknown = [];
     if (path.endsWith("/users/me"))
       data = {

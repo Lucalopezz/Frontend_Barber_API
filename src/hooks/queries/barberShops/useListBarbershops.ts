@@ -1,3 +1,4 @@
+import { useUser } from "@/hooks/useUser";
 import type { BarberShop } from "@/types/barberShop.type";
 import api from "@/utils/api";
 import { useQuery } from "@tanstack/react-query";
@@ -19,20 +20,17 @@ interface ListBarberShopsReturn {
 }
 
 export const useListBarberShops = (params: ListBarberShopsParams) => {
-  const token = localStorage.getItem("token");
 
+  const { authenticated } = useUser();
   return useQuery<ListBarberShopsReturn>({
     queryKey: ["barber-shops", params],
     queryFn: async () => {
       const { data } = await api.get("/barber-shops", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         params,
       });
 
       return data;
     },
-    enabled: !!token,
+    enabled: authenticated,
   });
 };

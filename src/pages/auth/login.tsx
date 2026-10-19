@@ -2,12 +2,13 @@ import { AuthLayout } from "@/components/layout/AuthLayout";
 import { LoginForm } from "@/components/auth/loginForm";
 import type { LoginData } from "./types/login.types";
 import { useUser } from "@/hooks/useUser";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 export const Login = () => {
   const { login: loginContext } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
   const [sessionExpired] = useState(
     () => sessionStorage.getItem("sessionExpired") === "true",
   );
@@ -19,7 +20,8 @@ export const Login = () => {
   async function loginUser(elements: LoginData) {
     const confirm = await loginContext(elements);
     if (confirm) {
-      navigate("/");
+      const from = location.state?.from;
+      navigate(typeof from === "string" && /^\/(book|appointments)(\/|$)/.test(from) ? from : "/");
     }
   }
 

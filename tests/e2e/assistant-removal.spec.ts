@@ -1,3 +1,4 @@
+import { mockSession } from "./session-fixture";
 import { expect, test } from "@playwright/test";
 
 for (const width of [360, 1440]) {
@@ -5,10 +6,9 @@ for (const width of [360, 1440]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
-    await page.addInitScript(() =>
-      localStorage.setItem("token", "assistant-removal-test"),
-    );
+    await mockSession(page, "assistant-removal-test");
     await page.route("**/api/v1/**", (route) => {
+      if (new URL(route.request().url()).pathname.includes("/auth/")) return route.fallback();
       const profile = new URL(route.request().url()).pathname.endsWith("/users/me");
       return route.fulfill({
         json: {
@@ -54,9 +54,7 @@ for (const authenticated of [false, true]) {
     page,
   }) => {
     if (authenticated) {
-      await page.addInitScript(() =>
-        localStorage.setItem("token", "assistant-removal-test"),
-      );
+      await mockSession(page, "assistant-removal-test");
     }
     const requests: string[] = [];
     page.on("request", (request) => {

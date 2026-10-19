@@ -1,3 +1,4 @@
+import { sessionTokens } from "./session-fixture";
 import { expect, test, type Page, type Route } from "@playwright/test";
 
 // Deliberately fake tokens. All API calls are intercepted; no database is used.
@@ -24,7 +25,7 @@ async function respond(route: Route, status: number, body: unknown) {
   await route.fulfill({
     status,
     contentType: "application/json",
-    headers: { "access-control-allow-origin": "*" },
+    headers: { "access-control-allow-origin": "http://127.0.0.1:5174", "access-control-allow-credentials": "true" },
     body: JSON.stringify(body),
   });
 }
@@ -64,17 +65,21 @@ function deferred() {
 }
 
 test.beforeEach(async ({ page }) => {
+  let active: keyof typeof accounts | undefined;
   await page.route(apiPattern, async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
     if (request.method() === "OPTIONS") return respond(route, 200, {});
+    if (path.endsWith("/auth/logout")) { active = undefined; return route.fulfill({status:204}); }
+    if (path.endsWith("/auth/refresh")) return active ? respond(route,200,sessionTokens(accounts[active].token)) : respond(route,401,{code:'AUTH_SESSION_INVALID'});
     if (path.endsWith("/users/login")) {
       const input = request.postDataJSON();
       const account = Object.values(accounts).find(
         (value) => value.email === input.email,
       );
+      if(account && input.password === password) active = account === accounts.a ? "a" : "b";
       return account && input.password === password
-        ? respond(route, 201, { accessToken: account.token })
+        ? respond(route, 201, sessionTokens(account.token))
         : respond(route, 400, { message: "Credenciais inválidas" });
     }
     if (path.endsWith("/users/me")) {
@@ -114,6 +119,31 @@ test("login fields have accessible labels and autofill metadata", async ({
     "current-password",
   );
 });
+
+test(
+  "login submitted during an anonymous session check is not cancelled",
+  async ({ page }) => {
+    const held = deferred();
+    const started = deferred();
+    await page.route("**/api/v1/auth/refresh", async (route) => {
+      started.resolve();
+      await held.promise;
+      await respond(route, 401, { code: "AUTH_SESSION_INVALID" });
+    });
+    await started.promise;
+    await page.getByPlaceholder("seu@exemplo.com").fill(accounts.a.email);
+    await page.getByPlaceholder("••••••••").fill(password);
+    const button = page.getByRole("button", { name: /^Entr/ });
+    const submission = button.click();
+    await expect(button).toBeDisabled();
+    held.resolve();
+    await submission;
+    await expect(page).toHaveURL(/\/$/);
+    await expect(
+      page.getByRole("heading", { name: "Encontre uma Barbearia" }),
+    ).toBeVisible();
+  },
+);
 
 test("pending login disables resubmission and recovers after a rejected request", async ({
   page,
@@ -164,7 +194,7 @@ test("logout clears the session without duplicate authentication alerts or rende
   await expect(
     page
       .getByRole("alert")
-      .filter({ hasText: "Logout realizado com sucesso!" }),
+      .filter({ hasText: "Você saiu neste navegador." }),
   ).toBeVisible();
   await expect(
     page.getByText("Você não está autenticado! Por favor, faça login."),
@@ -193,7 +223,7 @@ test("a 401 for the current session redirects once and keeps the expiration mess
 }) => {
   await login(page, "a");
   await page.route(userPattern, (route) =>
-    respond(route, 401, { message: "Expired" }),
+    respond(route, 401, { message: "Expired", code: "AUTHENTICATION_REQUIRED" }),
   );
   await openProfile(page);
   await expect(page).toHaveURL(/\/login$/);
@@ -231,14 +261,13 @@ test("an old account's delayed 401 cannot expire the new account session", async
   }
   await page.waitForLoadState("networkidle");
   await expect(page).toHaveURL(/\/$/);
-  expect(await page.evaluate(() => localStorage.getItem("token"))).toBe(
-    accounts.b.token,
-  );
+  expect(await page.evaluate(() => localStorage.getItem("token"))).toBeNull();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("barber.session.v1")!).sessionId)).toBeTruthy();
   await openProfile(page);
   await expect(page.getByText(accounts.b.name, { exact: true })).toBeVisible();
 });
 
-test("a login endpoint 401 preserves an existing authenticated session", async ({
+test("a rejected account switch does not restore the previous account", async ({
   page,
 }) => {
   await login(page, "a");
@@ -251,9 +280,8 @@ test("a login endpoint 401 preserves an existing authenticated session", async (
   await page.getByPlaceholder("••••••••").fill("WrongPassword2026!");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await page.waitForLoadState("networkidle");
-  expect(await page.evaluate(() => localStorage.getItem("token"))).toBe(
-    accounts.a.token,
-  );
+  expect(await page.evaluate(() => localStorage.getItem("token"))).toBeNull();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("barber.session.v1")!).sessionId)).toBeUndefined();
   await expect(
     page.getByRole("alert").filter({ hasText: "Credenciais inválidas" }),
   ).toBeVisible();

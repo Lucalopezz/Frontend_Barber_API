@@ -1,11 +1,13 @@
+import { mockSession } from "./session-fixture";
 import { test, expect, type Page } from "@playwright/test";
 
 async function openManagement(page: Page) {
   const writes: { method: string; data: Record<string, unknown> }[] = [];
-  await page.addInitScript(() => localStorage.setItem("token", "price-test"));
+  await mockSession(page, "price-test");
   await page.route("**/api/v1/**", async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
+    if (path.includes("/auth/")) return route.fallback();
     const shop = {
       id: "shop-1",
       name: "Navalha Clube",

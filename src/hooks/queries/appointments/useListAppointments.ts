@@ -1,3 +1,4 @@
+import { useUser } from "@/hooks/useUser";
 import type { Appointment } from "@/types/appointment.type";
 import api from "@/utils/api";
 import { useQuery } from "@tanstack/react-query";
@@ -26,19 +27,16 @@ interface ListAppointmentsReturn {
 }
 
 export const useListAppointments = (params: ListAppointmentsParams) => {
-  const accessToken = localStorage.getItem("token");
 
+  const { authenticated } = useUser();
   return useQuery<ListAppointmentsReturn>({
     queryKey: ["appointments", params],
     queryFn: async () => {
       const { data } = await api.get("/appointments", {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
         params: params,
       });
       return data;
     },
-    enabled: !!accessToken,
+    enabled: authenticated,
   });
 };
