@@ -183,7 +183,7 @@ test("real login restores after reload and browser reopening without persistent 
   }
 });
 
-test("two real tabs coalesce client-expired refresh and synchronize logout", async ({
+test("two real tabs coalesce rejected-token refresh and synchronize logout", async ({
   browser, request,
 }) => {
   const user = await account(request);
@@ -200,9 +200,23 @@ test("two real tabs coalesce client-expired refresh and synchronize logout", asy
       if (sent.method() === "POST" && sent.url() === `${api}/auth/refresh`)
         refreshes++;
     });
-    const future = new Date(Date.parse(session.accessTokenExpiresAt));
-    // Only browser Date advances; the server JWT has NOT expired in this test.
-    await Promise.all([first.clock.setFixedTime(future), second.clock.setFixedTime(future)]);
+    let readyCount = 0;
+    let releaseBarrier!: () => void;
+    const bothReady = new Promise<void>((resolve) => { releaseBarrier = resolve; });
+    await context.exposeBinding("__waitForRefreshBarrier", async () => {
+      readyCount++;
+      if (readyCount === 2) releaseBarrier();
+      await bothReady;
+    });
+    const refreshesStarted = [first, second].map((page) => page.evaluate(async (rejectedToken) => {
+      await (window as unknown as { __waitForRefreshBarrier: () => Promise<void> }).__waitForRefreshBarrier();
+      await (await import("/src/auth/session.ts")).refreshSession(rejectedToken);
+    }, session.accessToken));
+    await Promise.all(refreshesStarted);
+    const sessionIds = await Promise.all([first, second].map((page) => page.evaluate(async () =>
+      (await import("/src/auth/session.ts")).getSessionSnapshot()?.sessionId,
+    )));
+    expect(sessionIds).toEqual([session.sessionId, session.sessionId]);
     const appointmentsLoaded = [first, second].map((page) =>
       page.waitForResponse((response) =>
         response.request().method() === "GET" &&
