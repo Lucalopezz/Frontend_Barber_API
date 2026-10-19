@@ -1,5 +1,6 @@
 import api from "@/utils/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { appointmentKeys, availabilityKeys } from "./queryKeys";
 
 export const useCancelAppointment = (appointmentId: string) => {
   const queryClient = useQueryClient();
@@ -15,9 +16,9 @@ export const useCancelAppointment = (appointmentId: string) => {
     },
 
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["availability"] });
+      await queryClient.invalidateQueries({ queryKey: availabilityKeys.root });
       await queryClient.invalidateQueries({
-        queryKey: ["appointments"],
+        queryKey: appointmentKeys.root,
       });
     },
   });

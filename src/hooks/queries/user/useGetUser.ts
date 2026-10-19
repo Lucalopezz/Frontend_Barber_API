@@ -8,8 +8,9 @@ import { useQuery } from "@tanstack/react-query";
 
 export const useGetUser = () => {
   const { authenticated } = useUser();
+  const identity = getIdentity();
   return useQuery<User>({
-    queryKey: ["user"],
+    queryKey: ["user", identity.sessionId],
     queryFn: async () => {
       const generation = getIdentity().generation;
       const { data } = await api.get("/users/me");
@@ -18,5 +19,8 @@ export const useGetUser = () => {
       return data.data;
     },
     enabled: authenticated,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 };

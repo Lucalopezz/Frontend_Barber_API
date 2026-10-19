@@ -1,6 +1,7 @@
 import type { Service } from "@/types/services.type";
 import api from "@/utils/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { invalidateServiceCatalog } from "@/hooks/queries/catalogCache";
 
 export const useCreateService = () => {
   const qc = useQueryClient();
@@ -10,9 +11,6 @@ export const useCreateService = () => {
       const { data } = await api.post("/services", payload);
       return data;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["services"] });
-      qc.invalidateQueries({ queryKey: ["barber-shops"] });
-    },
+    onSuccess: () => invalidateServiceCatalog(qc),
   });
 };

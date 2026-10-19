@@ -1,5 +1,6 @@
 import api from "@/utils/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { invalidateShopCatalog } from "@/hooks/queries/catalogCache";
 
 export const useCreateBarberShop = () => {
   const queryClient = useQueryClient();
@@ -12,8 +13,10 @@ export const useCreateBarberShop = () => {
     },
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["barber-shops"] });
-      queryClient.invalidateQueries({ queryKey: ["user"] });
+      return Promise.all([
+        invalidateShopCatalog(queryClient),
+        queryClient.invalidateQueries({ queryKey: ["user"] }),
+      ]);
     },
   });
 };

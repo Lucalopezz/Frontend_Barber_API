@@ -8,21 +8,29 @@ import { Link, useParams } from "react-router-dom";
 export const ShopManagementPage = () => {
   const { id } = useParams();
   const user = useGetUser();
-  const { data, isLoading, error } = useGetBarberShop(id);
+  const { data, isLoading, error, refetch } = useGetBarberShop(id);
   if (isLoading)
     return (
       <p className="page-section" role="status">
         Carregando barbearia…
       </p>
     );
-  if (error || !data)
+  if (!data)
     return (
       <p className="page-section" role="alert">
-        Erro ao carregar barbearia.
+        Erro ao carregar barbearia. {" "}
+        <button className="underline" onClick={() => void refetch()}>Tentar novamente</button>
       </p>
     );
   if (user.isLoading)
     return <p className="page-section">Carregando usuário…</p>;
+  if (!user.data)
+    return (
+      <p className="page-section" role="alert">
+        Não foi possível confirmar o contexto da conta. {" "}
+        <button className="underline" onClick={() => void user.refetch()}>Tentar novamente</button>
+      </p>
+    );
   if (
     user.data?.barberShop?.id !== id ||
     user.data?.barberShop?.relationship !== "owner"
@@ -43,6 +51,18 @@ export const ShopManagementPage = () => {
           {data.address}
         </p>
       </header>
+      {error && (
+        <p role="alert">
+          Não foi possível atualizar os dados desta barbearia. Os dados exibidos podem estar desatualizados. {" "}
+          <button className="underline" onClick={() => void refetch()}>Tentar novamente</button>
+        </p>
+      )}
+      {user.error && (
+        <p role="alert">
+          Não foi possível atualizar o contexto da conta. As permissões exibidas podem estar desatualizadas. {" "}
+          <button className="underline" onClick={() => void user.refetch()}>Tentar novamente</button>
+        </p>
+      )}
       <nav
         aria-label="Seções da barbearia"
         className="flex flex-wrap gap-2 border-y py-3"

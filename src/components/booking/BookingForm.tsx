@@ -67,7 +67,7 @@ function AccountBookingForm({shopId,appointmentId,initialServiceId='',userId}:Bo
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!isCurrentIdentity(formGeneration) || !getSessionSnapshot()) { synchronizeIdentity(); return; }
-    if (pending || !slot || uncertain || !slots.data?.slots.some(s=>s.startsAt===slot) || services.isError || slots.isError) return;
+    if (pending || !slot || uncertain || !slots.isSuccess || slots.isFetching || !slots.data?.slots.some(s=>s.startsAt===slot) || services.isError) return;
     setMessage('');setReconciled(false);
     const generation=getIdentity().generation;
     const attempt={operationId:crypto.randomUUID(),generation,serviceId,date:slot,appointmentId};
@@ -86,7 +86,7 @@ function AccountBookingForm({shopId,appointmentId,initialServiceId='',userId}:Bo
       if(!isCurrentIdentity(generation)) return;
       if (isAxiosError(error) && error.response) {
         update({uncertain:undefined,...(error.response.status===409?{slot:''}:{})});
-        if(error.response.status===409){setMessage('Horário indisponível. Os horários foram atualizados; escolha novamente.');await slots.refetch();}
+        if(error.response.status===409){setMessage('Horário indisponível. Os horários foram atualizados; escolha novamente.');}
         else setMessage('Erro ao salvar agendamento. Verifique sua sessão e tente novamente.');
       } else await reconcile(attempt);
     }
@@ -159,7 +159,7 @@ function AccountBookingForm({shopId,appointmentId,initialServiceId='',userId}:Bo
       {slots.isFetching && <p>Consultando horários…</p>}
       {slots.isError && (
         <p role="alert">
-          Erro ao consultar horários.{" "}
+          {slots.data ? "Não foi possível atualizar os horários. Eles podem estar desatualizados. " : "Erro ao consultar horários. "}
           <button type="button" onClick={() => slots.refetch()}>
             Tentar novamente
           </button>

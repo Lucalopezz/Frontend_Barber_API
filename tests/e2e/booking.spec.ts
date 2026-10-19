@@ -601,3 +601,149 @@ test('callback de tentativa não enviada da conta anterior não regrava rascunho
  await expect.poll(()=>page.evaluate(()=>JSON.parse(sessionStorage.getItem('barber.booking.draft.v1')!).userId)).toBe('client-b');
  await expect.poll(()=>page.evaluate(()=>JSON.parse(sessionStorage.getItem('barber.booking.draft.v1')!).serviceId)).toBe('private-b');
 });
+
+test('agendamentos e disponibilidade revalidam a cada 30 segundos enquanto a consulta está ativa', async ({ page }) => {
+  await page.clock.install({ time: new Date("2030-10-15T12:00:00.000Z") });
+  const requests = await setup(page);
+  await page.goto("/appointments");
+  await expect.poll(() => requests.filter((r) => r.path === "/api/v1/appointments").length).toBe(1);
+  await page.clock.fastForward(30_000);
+  await expect.poll(() => requests.filter((r) => r.path === "/api/v1/appointments").length).toBe(2);
+
+  await page.goto("/book/shop-1");
+  await page.getByLabel("Serviço", { exact: true }).selectOption(service.id);
+  await page.getByLabel("Data", { exact: true }).fill("2030-10-21");
+  await expect.poll(() => requests.filter((r) => r.path === "/api/v1/barber-shops/shop-1/availability").length).toBe(1);
+  await page.clock.fastForward(30_000);
+  await expect.poll(() => requests.filter((r) => r.path === "/api/v1/barber-shops/shop-1/availability").length).toBe(2);
+
+  await page.goto("/appointments");
+  const availabilityRequests = requests.filter((r) => r.path === "/api/v1/barber-shops/shop-1/availability").length;
+  await page.clock.fastForward(60_000);
+  expect(requests.filter((r) => r.path === "/api/v1/barber-shops/shop-1/availability").length).toBe(availabilityRequests);
+});
+
+test('chaves de agendamentos e disponibilidade isolam identidade e todos os parâmetros', async ({ page }) => {
+  await page.goto("/login");
+  const keys = await page.evaluate(async () => {
+    const { appointmentKeys, availabilityKeys } = await import("/src/hooks/queries/appointments/queryKeys.ts");
+    return {
+      appointmentsA: appointmentKeys.list("sid-a", { page: 1, perPage: 20, date: "2030-10-21", serviceId: "service-a" }),
+      appointmentsOtherPage: appointmentKeys.list("sid-a", { page: 2, perPage: 20, date: "2030-10-21", serviceId: "service-a" }),
+      appointmentsOtherFilter: appointmentKeys.list("sid-a", { page: 1, perPage: 20, date: "2030-10-22", serviceId: "service-a" }),
+      appointmentsOtherIdentity: appointmentKeys.list("sid-b", { page: 1, perPage: 20, date: "2030-10-21", serviceId: "service-a" }),
+      slotsA: availabilityKeys.shop("sid-a", "shop-a", "service-a", "2030-10-21"),
+      slotsOtherService: availabilityKeys.shop("sid-a", "shop-a", "service-b", "2030-10-21"),
+      slotsOtherDate: availabilityKeys.shop("sid-a", "shop-a", "service-a", "2030-10-22"),
+      slotsOtherIdentity: availabilityKeys.shop("sid-b", "shop-a", "service-a", "2030-10-21"),
+      ownOtherIdentity: availabilityKeys.own("sid-b"),
+    };
+  });
+  expect(keys.appointmentsA).not.toEqual(keys.appointmentsOtherPage);
+  expect(keys.appointmentsA).not.toEqual(keys.appointmentsOtherFilter);
+  expect(keys.appointmentsA).not.toEqual(keys.appointmentsOtherIdentity);
+  expect(keys.slotsA).not.toEqual(keys.slotsOtherService);
+  expect(keys.slotsA).not.toEqual(keys.slotsOtherDate);
+  expect(keys.slotsA).not.toEqual(keys.slotsOtherIdentity);
+  expect(keys.ownOtherIdentity[1]).toBe("sid-b");
+});
+
+test('disponibilidade do profissional atualiza a cada 30 segundos enquanto a gestão está aberta', async ({ page }) => {
+  await page.clock.install({ time: new Date("2030-10-15T12:00:00.000Z") });
+  const requests = await setup(page, "owner");
+  await page.goto("/barber-shop/shop-1");
+  await expect.poll(() => requests.filter((r) => r.path === "/api/v1/appointments/availability/me").length).toBe(1);
+  await page.clock.fastForward(30_000);
+  await expect.poll(() => requests.filter((r) => r.path === "/api/v1/appointments/availability/me").length).toBe(2);
+});
+
+test('falha ao atualizar agendamentos informa dados desatualizados e preserva a lista', async ({ page }) => {
+  await page.clock.install({ time: new Date("2030-10-15T12:00:00.000Z") });
+  const requests = await setup(page);
+  let failRefresh = false;
+  let refreshRequests = 0;
+  await page.route(/\/api\/v1\/appointments(?:\?.*)?$/, async (route) => {
+    if (route.request().method() !== "GET") return route.fallback();
+    refreshRequests++;
+    return failRefresh ? respond(route, { message: "offline" }, 503) : route.fallback();
+  });
+  await page.goto("/appointments");
+  await expect.poll(() => refreshRequests).toBe(1);
+  await expect(page.getByText("Agendado", { exact: true })).toBeVisible();
+  failRefresh = true;
+  await page.clock.fastForward(30_000);
+  await expect.poll(() => refreshRequests).toBeGreaterThan(1);
+  await expect(page.getByRole("alert")).toContainText("Não foi possível atualizar os agendamentos", { timeout: 15_000 });
+  await expect(page.getByText("Agendado", { exact: true })).toBeVisible();
+  failRefresh = false;
+  await page.getByRole("button", { name: "Tentar novamente" }).click();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  expect(requests.filter((r) => r.path === "/api/v1/appointments").length).toBeGreaterThan(1);
+});
+
+test('falha ao atualizar expediente informa dados antigos e preserva a edição em andamento', async ({ page }) => {
+  await page.clock.install({ time: new Date("2030-10-15T12:00:00.000Z") });
+  await setup(page, "owner");
+  let failRefresh = false;
+  let refreshRequests = 0;
+  await page.route("**/api/v1/appointments/availability/me", async (route) => {
+    refreshRequests++;
+    return failRefresh ? respond(route, { message: "offline" }, 503) : route.fallback();
+  });
+  await page.goto("/barber-shop/shop-1");
+  await expect.poll(() => refreshRequests).toBe(1);
+  await page.getByLabel("Início expediente 1", { exact: true }).fill("10:00");
+  failRefresh = true;
+  await page.clock.fastForward(30_000);
+  await expect.poll(() => refreshRequests).toBeGreaterThan(1);
+  await expect(page.getByRole("alert")).toContainText("Não foi possível atualizar o expediente", { timeout: 15_000 });
+  await expect(page.getByLabel("Início expediente 1", { exact: true })).toHaveValue("10:00");
+  failRefresh = false;
+  await page.getByRole("button", { name: "Tentar novamente" }).click();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.getByLabel("Início expediente 1", { exact: true })).toHaveValue("10:00");
+});
+
+test('falha ao atualizar disponibilidade preserva o formulário e bloqueia a reserva até nova resposta válida', async ({ page }) => {
+  let failSecondDate = false;
+  let posts = 0;
+  const availabilityDates: string[] = [];
+  await setup(page);
+  await page.route("**/api/v1/appointments", async (route) => {
+    if (route.request().method() === "POST") {
+      posts++;
+      return respond(route, { data: { id: "created" } }, 201);
+    }
+    return route.fallback();
+  });
+  await page.route(/\/api\/v1\/barber-shops\/shop-1\/availability(?:\?.*)?$/, async (route) => {
+    const date = new URL(route.request().url()).searchParams.get("date");
+    availabilityDates.push(String(date));
+    if (date === "2030-10-22" && failSecondDate) return respond(route, { message: "offline" }, 503);
+    return respond(route, {
+      data: {
+        timezone: shop.timezone,
+        slots: [{ startsAt: slot, endsAt: "2030-10-21T12:30:00.000Z" }],
+      },
+    });
+  });
+  await page.goto("/book/shop-1");
+  await page.getByLabel("Serviço", { exact: true }).selectOption(service.id);
+  await page.getByLabel("Data", { exact: true }).fill("2030-10-21");
+  await page.getByRole("button", { name: "09:00", exact: true }).click();
+  failSecondDate = true;
+  await page.getByLabel("Data", { exact: true }).fill("2030-10-22");
+  await expect.poll(() => availabilityDates.length).toBe(2);
+  await expect(page.getByRole("alert")).toContainText("Erro ao consultar horários", { timeout: 15_000 });
+  await expect(page.getByLabel("Serviço", { exact: true })).toHaveValue(service.id);
+  await expect(page.getByLabel("Data", { exact: true })).toHaveValue("2030-10-22");
+  await expect(page.getByRole("button", { name: "Confirmar agendamento" })).toBeDisabled();
+  failSecondDate = false;
+  await page.getByRole("button", { name: "Tentar novamente" }).last().click();
+  await expect(page.getByRole("button", { name: "09:00", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "09:00", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Confirmar agendamento" })).toBeEnabled();
+  await page.getByRole("button", { name: "Confirmar agendamento" }).click();
+  await expect(page.getByRole("status")).toContainText("Agendamento criado");
+  expect(posts).toBe(1);
+});

@@ -9,12 +9,13 @@ export const Appointments = () => {
   const [page, setPage] = useState(1);
   const { data: user } = useGetUser();
 
-  const { data, isLoading, error } = useListAppointments({
+  const appointmentsQuery = useListAppointments({
     page,
     sort: "date",
     sortDir: "asc",
     perPage: 50,
   });
+  const { data, isLoading, isFetching, error } = appointmentsQuery;
 
   return (
     <div className="page-section max-w-5xl mx-auto space-y-8">
@@ -24,7 +25,9 @@ export const Appointments = () => {
         user={user}
         data={data}
         isLoading={isLoading}
+        isFetching={isFetching}
         error={error}
+        onRetry={() => void appointmentsQuery.refetch()}
       />
       {data && data.meta.lastPage > 1 && (
         <nav
