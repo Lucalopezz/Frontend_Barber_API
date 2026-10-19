@@ -1,94 +1,45 @@
-# React + TypeScript + Vite
+# Barber Shop — frontend
 
-> **PS — mudança de foco em 17/10/2026:** este front fazia parte de um projeto
-> de estudo de barbearias que ficou incompleto. A partir deste ponto, ele passa
-> a servir também como laboratório para estudar IA, skills, agentes e Git
-> worktrees, junto com a Barber Shop API. A documentação original foi
-> preservada abaixo. Veja o [ambiente e estado atual](./docs/estado-atual.md)
-> para executar com pnpm e conhecer as limitações reais.
+Interface de agendamento de barbearias feita com React, TypeScript e Vite. O projeto também é usado como laboratório de estudo e ainda está em evolução. A API fica no repositório independente [Projeto_Barber_API](https://github.com/Lucalopezz/Projeto_Barber_API).
 
-O [CI do frontend](./docs/ci-frontend.md) automatiza lint, build e testes de interface com API controlada em pull requests e pushes na `main`. A integração com API/PostgreSQL reais tem [procedimento próprio](./tests/integration/README.md). Para entender branches, PRs, `gh` e as automações, leia o [fluxo Git/GitHub/Actions](./docs/fluxo-git-github-actions.md).
+## O que funciona
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+- Clientes podem criar conta, entrar, procurar barbearias e serviços, escolher um horário, reservar e acompanhar ou cancelar agendamentos.
+- Proprietários podem criar e editar a barbearia, administrar serviços e disponibilidade, além de remarcar e concluir atendimentos.
+- O perfil permite consultar e atualizar dados da conta. A sessão é renovada pela API; consulte o [contrato de sessões](./docs/sessoes-autenticacao.md).
 
-Currently, two official plugins are available:
+As reservas seguem as regras da API: antecedência mínima de 30 minutos, horizonte de 60 dias, horários em intervalos de 30 minutos e cancelamento pelo cliente até 24 horas antes. A interface informa essas regras, mas a API decide se uma operação é válida.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Executar localmente
 
-## React Compiler
+Use Node.js **24.9 ou superior** para executar o frontend junto da API e pnpm **12.11.2** (versão declarada em `package.json`). Prepare e inicie a API conforme o [guia do backend](https://github.com/Lucalopezz/Projeto_Barber_API/blob/main/docs/desenvolvimento.md); por padrão, ela atende em `http://localhost:3001/api/v1`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Neste repositório:
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm install --frozen-lockfile
+cp .env.example .env.local
+pnpm dev --host localhost --port 5173 --strictPort
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Abra `http://localhost:5173` e crie uma conta em `/signup`. O exemplo de ambiente aponta para a API em `localhost`; mantenha o mesmo nome de host no navegador e na URL da API para que a sessão por cookie funcione. Se mudar a porta ou o host do frontend, ajuste a origem permitida pela API. Variáveis `VITE_*` são incluídas no bundle público: não coloque segredos nelas.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Verificações
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+| Comando | O que verifica |
+| --- | --- |
+| `pnpm lint` | Regras de lint do frontend. |
+| `pnpm build` | TypeScript e bundle de produção. |
+| `pnpm test:e2e` | Fluxos no Chromium com respostas da API controladas, sem banco. |
+| `pnpm test:integration` | Jornada com Chromium, API e PostgreSQL reais. |
 
-## Políticas de agendamento
+Para preparar o navegador e entender o isolamento de cada suíte, consulte os guias de [testes de interface](./tests/e2e/README.md) e [integração real](./tests/integration/README.md). Os workflows de [CI do frontend](./docs/ci-frontend.md) e [CI integrado](./docs/ci-integracao.md) executam essas verificações nos pull requests e na `main`.
 
-A jornada de reservas aplica antecedência de 30 minutos a 60 dias, grade local de 30 minutos e cancelamento pelo cliente até 24 horas antes. Folgas/expediente preservam reservas existentes. O assistente experimental foi removido: não há mais tela, navegação ou integração com `/api/v1/assistant/chat`. O endereço antigo `/assistant` segue o tratamento existente de página inexistente. Catálogo, serviços e agendamento permanecem disponíveis pelas telas próprias.
+## Documentação
 
-## Histórico — políticas e assistente de consultas
+- [Diretrizes da interface](./docs/interface.md)
+- [Sessões e autenticação](./docs/sessoes-autenticacao.md)
+- [Fluxo de Git, PRs e GitHub Actions](./docs/fluxo-git-github-actions.md)
+- [Registro histórico do ambiente e das entregas](./docs/estado-atual.md)
 
-> Registro da entrega anterior, preservado como evidência histórica. O assistente e seus testes exclusivos foram removidos posteriormente; os resultados abaixo não descrevem a suíte atual.
-
-O laboratório incluía `/assistant`, autenticado e identificado como **Modo simulado**, para consultar catálogo, serviços e horários por ferramentas reais. Não havia modelo generativo nem operações de escrita no assistente. Os contratos, limites e relatório histórico ficam em `../Projeto_Barber_API/docs/assistant/simulador.md` e `../Projeto_Barber_API/docs/entrega-politicas-assistente.md` no workspace com ambos os projetos.
-
-Validação desta entrega no checkout integrado: lint/build, **32 cenários de interface** e **2 jornadas com API/PostgreSQL reais** aprovados. A revisão independente encontrou e corrigiu contexto antigo ao paginar lojas no assistente; regressões permanentes cobrem paginação, perguntas apenas com espaços e prazo de cancelamento. A tela usou a exceção de testes após implementação visual; as correções de bugs observaram RED/GREEN.
+O assistente experimental de consultas foi removido. O registro dessa entrega permanece na documentação histórica; catálogo, serviços e agendamentos continuam acessíveis pelas telas próprias.
