@@ -1,18 +1,15 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import type { User as UserType } from "@/types/user.type";
-import { showToast } from "@/utils/toast";
 import { Mail, User, BadgeCheck, Calendar } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 type UserInfoProps = {
   data: UserType | undefined;
   isLoading: boolean;
   error: Error | null;
+  onRetry: () => void;
 };
 
-export const UserInfo = ({ data, isLoading, error }: UserInfoProps) => {
-  const navigate = useNavigate();
-
+export const UserInfo = ({ data, isLoading, error, onRetry }: UserInfoProps) => {
   if (isLoading) {
     return (
       <div className="panel w-full space-y-4">
@@ -31,14 +28,23 @@ export const UserInfo = ({ data, isLoading, error }: UserInfoProps) => {
     );
   }
 
-  if (error || !data) {
-    showToast(`Erro ao carregar usuário ${error?.message}`, "error");
-    navigate("/login");
-    return null;
+  if (!data) {
+    return (
+      <div className="panel w-full" role="alert">
+        <p>Não foi possível atualizar os dados da conta. Verifique a conexão e tente novamente.</p>
+        <button className="underline" onClick={onRetry}>Tentar novamente</button>
+      </div>
+    );
   }
   return (
     <div className="panel w-full">
       <h2 className="text-lg font-semibold mb-6">Seu Perfil</h2>
+      {error && (
+        <div className="mb-4" role="status">
+          Não foi possível atualizar os dados da conta. Os dados exibidos podem estar desatualizados. {" "}
+          <button className="underline" onClick={onRetry}>Tentar novamente</button>
+        </div>
+      )}
 
       {/* Avatar simples */}
       <div className="flex flex-col items-center mb-6">

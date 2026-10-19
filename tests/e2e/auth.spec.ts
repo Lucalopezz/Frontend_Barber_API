@@ -25,7 +25,7 @@ async function respond(route: Route, status: number, body: unknown) {
   await route.fulfill({
     status,
     contentType: "application/json",
-    headers: { "access-control-allow-origin": "http://127.0.0.1:5174", "access-control-allow-credentials": "true" },
+    headers: { "access-control-allow-origin": route.request().headers().origin ?? "http://127.0.0.1:5174", "access-control-allow-credentials": "true" },
     body: JSON.stringify(body),
   });
 }
@@ -285,4 +285,64 @@ test("a rejected account switch does not restore the previous account", async ({
   await expect(
     page.getByRole("alert").filter({ hasText: "Credenciais inválidas" }),
   ).toBeVisible();
+});
+
+test("a forbidden mutation refreshes permission context without logging out or retrying", async ({ page }) => {
+  let profileReads = 0;
+  await page.route(userPattern, async (route) => {
+    profileReads++;
+    return respond(route, 200, { data: { ...accounts.a, role: "client", createdAt: "2026-01-01T12:00:00Z", ownedBarberShops: [] } });
+  });
+  let forbiddenCalls = 0;
+  await page.route("**/api/v1/test-forbidden", async (route) => {
+    forbiddenCalls++;
+    return respond(route, 403, { message: "Forbidden" });
+  });
+  await login(page, "a");
+  await expect.poll(() => profileReads).toBe(1);
+  await page.evaluate(async () => {
+    const [{ queryClient }, { default: api }] = await Promise.all([
+      import("/src/providers/queryClient.ts"),
+      import("/src/utils/api.ts"),
+    ]);
+    const mutation = queryClient.getMutationCache().build(queryClient, {
+      mutationFn: () => api.get("/test-forbidden"),
+    });
+    await mutation.execute(undefined).catch(() => undefined);
+  });
+  await expect.poll(() => profileReads).toBe(2);
+  expect(forbiddenCalls).toBe(1);
+  await expect(page.getByRole("heading", { name: "Encontre uma Barbearia" })).toBeVisible();
+  expect(await page.evaluate(async () => (await import("/src/auth/session.ts")).getAuthState().status)).toBe("authenticated");
+});
+
+test("a failed profile revalidation preserves known account data and offers retry", async ({ page }) => {
+  let profileReads = 0;
+  let releaseFailure!: () => void;
+  let signalFailure!: () => void;
+  const failureRequested = new Promise<void>((resolve) => { signalFailure = resolve; });
+  const allowFailure = new Promise<void>((resolve) => { releaseFailure = resolve; });
+  await page.route(userPattern, async (route) => {
+    profileReads++;
+    if (profileReads === 1) {
+      return respond(route, 200, { data: { ...accounts.a, role: "client", createdAt: "2026-01-01T12:00:00Z", ownedBarberShops: [] } });
+    }
+    signalFailure();
+    await allowFailure;
+    return respond(route, 503, { message: "Service unavailable" });
+  });
+  const firstProfileResponse = page.waitForResponse((response) => response.url().includes("/users/me") && response.status() === 200);
+  await login(page, "a");
+  await expect.poll(() => profileReads).toBe(1);
+  await firstProfileResponse;
+  await openProfile(page);
+  await expect(page.getByRole("heading", { name: "Minha conta" })).toBeVisible();
+  const failedResponse = page.waitForResponse((response) => response.url().includes("/users/me") && response.status() === 503);
+  await failureRequested;
+  releaseFailure();
+  await failedResponse;
+  await expect(page.getByText(accounts.a.name, { exact: true })).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("Os dados exibidos podem estar desatualizados", { timeout: 15_000 });
+  await expect(page.getByRole("button", { name: "Tentar novamente" })).toBeVisible();
+  expect(profileReads).toBeGreaterThan(1);
 });
