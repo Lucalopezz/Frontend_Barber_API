@@ -22,7 +22,7 @@ Para reutilizar um Chromium instalado no sistema, sem baixar outro navegador:
 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium pnpm test:e2e
 ```
 
-As regressões cobrem labels e autofill; bloqueio de reenvio enquanto o login está pendente; falha e nova tentativa; logout sem notificações duplicadas ou efeitos durante render; restauração após reload e troca de conta; expiração da sessão atual com mensagem após redirecionar; resposta 401 atrasada da conta anterior; e 401 do endpoint público de login sem invalidar a sessão existente.
+As regressões cobrem labels e autofill; bloqueio de reenvio enquanto o login está pendente; falha e nova tentativa; logout sem notificações duplicadas ou efeitos durante render; restauração após reload e troca de conta; expiração da sessão atual com mensagem após redirecionar; resposta 401 atrasada da conta anterior; e falha de troca de conta sem restaurar a identidade anterior. A troca de conta encerra primeiro a sessão conhecida, conforme o contrato atual.
 
 As respostas atrasadas são controladas por promises nos testes. Não dependem do tempo de resposta de um backend real. Traces de falhas ficam em `test-results/`, ignorado pelo Git; podem conter dados da sessão de teste. Esta suíte não substitui o smoke de integração com a API real.
 
@@ -31,3 +31,7 @@ PS (18/10/2026): a suíte também cobre jornada de agendamento, falhas de mutaç
 Remoção do assistente: a suíte exclusiva `assistant.spec.ts` foi retirada junto da tela. `assistant-removal.spec.ts` verifica ausência de acesso no menu e navegação em desktop/mobile, preservação do acesso a agendamentos e tratamento da antiga URL `/assistant` pelo fallback existente, com e sem autenticação.
 
 Políticas: `booking.spec.ts` congela o relógio para manter as reservas no futuro e testa cancelamento pelo cliente exatamente a 24 horas, um milissegundo depois do limite e prazo expirando com a confirmação aberta. As regras de antecedência (30 minutos), horizonte (60 dias), grade (30 minutos) e preservação de reservas ao alterar disponibilidade são informadas pela interface; a API continua a autoridade dessas regras.
+
+## Sessões e refresh
+
+Os mocks de sessão retornam o contrato completo e simulam a recuperação por cookie; não usam mais token em localStorage. Os testes de autenticação verificam ausência de credenciais persistentes, bootstrap antes da rota protegida, duas abas com quatro requisições concorrentes e uma renovação efetiva, logout offline após reload, respostas antigas, saída durante login e login enfileirado antes de logout, cookies ambíguos e troca de senha sincronizada. Falhas de reserva cobrem criação e remarcação com resposta perdida, rascunho por identidade, revalidação e bloqueio durável de reenvio incerto. Consulte [sessões na interface](../../docs/sessoes-autenticacao.md).

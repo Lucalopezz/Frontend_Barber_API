@@ -4,14 +4,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 
 export const useUpdateService = (serviceId: string) => {
-  const token = localStorage.getItem("token");
   const qc = useQueryClient();
 
   return useMutation({
     mutationFn: async (payload: Partial<Service>) => {
-      const { data } = await api.patch(`/services/${serviceId}`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await api.patch(`/services/${serviceId}`, payload);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["services"] }),

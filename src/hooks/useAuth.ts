@@ -1,72 +1,27 @@
-import type { LoginData } from "@/pages/auth/types/login.types";
-import type { RegisterData } from "@/pages/auth/types/register.types";
-import api from "@/utils/api";
-import { showToast } from "@/utils/toast";
-import { useState } from "react";
-import { AxiosError } from "axios";
-import { useQueryClient } from "@tanstack/react-query";
-
-type LoginToken = {
-  accessToken: string;
-};
-
+import type { LoginData } from '@/pages/auth/types/login.types';
+import type { RegisterData } from '@/pages/auth/types/register.types';
+import api from '@/utils/api';
+import { showToast } from '@/utils/toast';
+import { useEffect, useSyncExternalStore } from 'react';
+import { isAxiosError } from 'axios';
+import { useQueryClient } from '@tanstack/react-query';
+import { bootstrap, getAuthState, loginSession, logoutSession, onIdentityChange, subscribeAuth } from '@/auth/session';
 export function useAuth() {
-  const [authenticated, setAuthenticated] = useState(
-    () => !!localStorage.getItem("token"),
-  );
-  const queryClient = useQueryClient();
-  const loading = false;
-
+  const state = useSyncExternalStore(subscribeAuth, getAuthState);
+  const client = useQueryClient();
+  useEffect(() => onIdentityChange(() => { void client.cancelQueries(); client.clear(); }), [client]);
+  useEffect(() => { void bootstrap(); }, []);
   async function register(data: RegisterData) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { confirmPassword, ...userData } = data;
-    try {
-      await api.post("/users", userData);
-      showToast("Conta criada com sucesso! Faça o login para continuar");
-      return true;
-    } catch (error) {
-      if (error instanceof AxiosError && error.response) {
-        const message = error.response.data.message;
-        showToast(message, "error");
-      } else {
-        showToast("Erro inesperado", "error");
-      }
-      return false;
-    }
+    const { confirmPassword: _confirm, ...input } = data;
+    void _confirm;
+    try { await api.post('/users', input); showToast('Conta criada com sucesso! Faça o login para continuar'); return true; }
+    catch (error) { showToast(isAxiosError(error) ? error.response?.data?.message ?? 'Verifique sua conexão e tente novamente.' : 'Erro inesperado', 'error'); return false; }
   }
-
-  async function authUser(data: LoginToken) {
-    queryClient.clear();
-    localStorage.setItem("token", data.accessToken);
-    api.defaults.headers.Authorization = `Bearer ${data.accessToken}`;
-    setAuthenticated(true);
+  async function login(input: LoginData) {
+    try { await loginSession(input); showToast('Login realizado com sucesso!'); return true; }
+    catch (error) { showToast(isAxiosError(error) ? error.response?.data?.message ?? 'Verifique sua conexão e tente novamente.' : error instanceof Error ? error.message : 'Erro inesperado', 'error'); return false; }
   }
-
-  async function login(loginData: LoginData) {
-    try {
-      const response = await api.post("/users/login", loginData);
-
-      showToast("Login realizado com sucesso!");
-      await authUser(response.data);
-      return true;
-    } catch (error) {
-      if (error instanceof AxiosError && error.response) {
-        const message = error.response.data.message;
-        showToast(message, "error");
-      } else {
-        showToast("Erro inesperado", "error");
-      }
-      return false;
-    }
-  }
-
-  function logout() {
-    setAuthenticated(false);
-    localStorage.removeItem("token");
-    api.defaults.headers.Authorization = "";
-    queryClient.clear();
-    showToast("Logout realizado com sucesso!");
-  }
-
-  return { authenticated, register, login, logout, loading };
+  function logout() { void logoutSession(); showToast('Você saiu neste navegador.'); }
+  return { authenticated: state.status === 'authenticated', loading: state.status === 'loading',
+    sessionError: state.status === 'unavailable' ? state.error : undefined, retrySession: bootstrap, register, login, logout };
 }

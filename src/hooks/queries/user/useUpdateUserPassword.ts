@@ -1,3 +1,4 @@
+import { passwordChanged } from "@/auth/session";
 import { useMutation } from "@tanstack/react-query";
 
 import api from "@/utils/api";
@@ -7,16 +8,12 @@ import type { UpdateUserPasswordData } from "@/components/user/updateUserPasswor
 export const useUpdateUserPassword = (id?: string) => {
   return useMutation({
     mutationFn: async (userData: UpdateUserPasswordData) => {
-      const token = localStorage.getItem("token");
-
-      const { data } = await api.patch(`/users/${id}`, userData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    
+      const { data } = await api.patch(`/users/${id}`, userData);
 
       return data.data;
     },
+    onSuccess: () => passwordChanged(),
     onError: (error: Error) => {
       showToast(error.message, "error");
     },

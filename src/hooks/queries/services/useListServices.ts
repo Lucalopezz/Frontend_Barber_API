@@ -1,3 +1,4 @@
+import { useUser } from "@/hooks/useUser";
 import type { Service } from "@/types/services.type";
 import api from "@/utils/api";
 import { useQuery } from "@tanstack/react-query";
@@ -8,13 +9,12 @@ interface ListServicesReturn {
 }
 
 export const useListServices = (barberShopId: string) => {
-  const token = localStorage.getItem("token");
+  const { authenticated } = useUser();
   return useQuery<ListServicesReturn>({
     queryKey: ["services", barberShopId],
     queryFn: async () => {
       async function fetchPage(page: number) {
         const { data } = await api.get<ListServicesReturn>("/services", {
-          headers: { Authorization: `Bearer ${token}` },
           params: { barberShopId, page, perPage: 50 },
         });
         return data;
@@ -30,6 +30,6 @@ export const useListServices = (barberShopId: string) => {
         data: [...first.data, ...remaining.flatMap((page) => page.data)],
       };
     },
-    enabled: !!token && !!barberShopId,
+    enabled: authenticated && !!barberShopId,
   });
 };

@@ -10,13 +10,8 @@ export const useUpdateUser = (id?: string) => {
 
   return useMutation({
     mutationFn: async (userData: UpdateUserData) => {
-      const token = localStorage.getItem("token");
-
-      const { data } = await api.put(`/users/${id}`, userData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    
+      const { data } = await api.put(`/users/${id}`, userData);
 
       return data.data;
     },

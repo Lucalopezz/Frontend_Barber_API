@@ -2,16 +2,11 @@ import api from "@/utils/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useUpdateBarberShop = (shopId: string) => {
-  const accessToken = localStorage.getItem("token");
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: { name: string; address: string }) => {
-      const response = await api.put(`/barber-shops/${shopId}`, data, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await api.put(`/barber-shops/${shopId}`, data);
 
       return response.data;
     },

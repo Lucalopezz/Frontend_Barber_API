@@ -1,13 +1,15 @@
+import { mockSession } from "./session-fixture";
 import { expect, test } from "@playwright/test";
 
 test("cria barbearia montando endereço a partir dos campos separados", async ({
   page,
 }) => {
   let submittedAddress: string | undefined;
-  await page.addInitScript(() => localStorage.setItem("token", "shop-address-test"));
+  await mockSession(page, "shop-address-test");
   await page.route("**/api/v1/**", async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
+    if (path.includes("/auth/")) return route.fallback();
     if (path.endsWith("/users/me")) {
       return route.fulfill({
         status: 200,

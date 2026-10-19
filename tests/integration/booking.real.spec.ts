@@ -154,9 +154,13 @@ test("owner configures availability and clients book/cancel with real API, datab
     page.on("pageerror", (error) => errors.push(error.message));
   try {
     await login(ownerPage, owner);
-    const originalToken = await ownerPage.evaluate(() =>
-      localStorage.getItem("token"),
+    const originalToken = await ownerPage.evaluate(async () =>
+      (await import('/src/auth/session.ts')).getAccessToken(),
     );
+    expect(originalToken).toBeTruthy();
+    expect(await ownerPage.evaluate(() => localStorage.getItem('token'))).toBeNull();
+    const refreshCookie=(await ownerContext.cookies()).find(cookie=>cookie.name.startsWith('barber_refresh_'));
+    expect(refreshCookie?.httpOnly).toBe(true);
     await ownerPage
       .getByRole("button", { name: "Criar Loja", exact: true })
       .click();
@@ -199,7 +203,7 @@ test("owner configures availability and clients book/cancel with real API, datab
     expect(serviceResult.status()).toBe(201);
     const serviceId = (await serviceResult.json()).data.id as string;
     expect(
-      (await ownerPage.evaluate(() => localStorage.getItem("token"))) ===
+      (await ownerPage.evaluate(async () => (await import("/src/auth/session.ts")).getAccessToken())) ===
         originalToken,
     ).toBe(true);
 

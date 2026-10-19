@@ -10,6 +10,8 @@ export interface UserContextType {
   login: (data: LoginData) => Promise<boolean>;
   logout: () => void;
   loading: boolean;
+  sessionError?: string;
+  retrySession: () => Promise<void>;
 }
 
 interface UserProviderProps {
@@ -17,11 +19,11 @@ interface UserProviderProps {
 }
 
 export function UserProvider({ children }: UserProviderProps) {
-  const { authenticated, register, login, logout, loading } = useAuth();
+  const { authenticated, register, login, logout, loading, sessionError, retrySession } = useAuth();
 
   return (
     <UserContext.Provider
-      value={{ authenticated, register, login, logout, loading }}
+      value={{ authenticated, register, login, logout, loading, sessionError, retrySession }}
     >
       {children}
     </UserContext.Provider>
