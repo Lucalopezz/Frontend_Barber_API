@@ -1,6 +1,6 @@
 # Política de cache de consultas do frontend
 
-Status: planejado; decisões confirmadas pelo usuário em 18/10/2026. Não implementado.
+Status: implementação local concluída e publicada em `feat/cache-consultas` (`ccd8d522342eea7fdbee72d9ed67ae31b3908fc3`). Gates locais registrados em [validacao.md](validacao.md) estão verdes; CI remoto e integração do refresh-base permanecem pendentes. Merge não realizado.
 
 ## Problema
 
@@ -77,4 +77,4 @@ Cache no backend, Redis, modo offline de escrita, persistência local de consult
 
 ## Dependências e notas adicionais
 
-Executar após [sessões e refresh token](../../../Projeto_Barber_API/.scratch/refresh-token/spec.md), reutilizando sua identidade e seus eventos de saída/troca de conta. A constatação sobre invalidações existentes orienta a regressão futura; não foi corrigida nesta sessão de planejamento.
+Executado sobre [sessões e refresh token](../../../Projeto_Barber_API/.scratch/refresh-token/spec.md), reutilizando sua identidade e seus eventos de saída/troca de conta. A validação local e o estado remoto do refresh estão registrados em [validacao-frontend.md](../refresh-token/validacao-frontend.md).
