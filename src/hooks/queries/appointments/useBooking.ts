@@ -1,6 +1,11 @@
 import { useUser } from "@/hooks/useUser";
 import api from "@/utils/api";
+import { isAxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getSessionSnapshot } from "@/auth/session";
+import { appointmentKeys, availabilityKeys } from "./queryKeys";
+import { queryPolicies } from "./queryPolicies";
+
 export interface Availability {
   timezone: string;
   slots: { startsAt: string; endsAt: string }[];
@@ -20,39 +25,53 @@ export interface OwnAvailability {
     reason: string | null;
   }[];
 }
+
 export function useSlots(shopId: string, serviceId: string, date: string) {
   const { authenticated } = useUser();
+  const sessionId = getSessionSnapshot()?.sessionId;
   return useQuery<Availability>({
-    queryKey: ["availability", shopId, serviceId, date],
-    enabled: authenticated && !!shopId && !!serviceId && !!date,
+    queryKey: availabilityKeys.shop(sessionId, shopId, serviceId, date),
+    enabled: authenticated && !!sessionId && !!shopId && !!serviceId && !!date,
     queryFn: async () =>
       (
         await api.get(`/barber-shops/${shopId}/availability`, {
-          params: { serviceId, date }
+          params: { serviceId, date },
         })
       ).data.data,
+    staleTime: queryPolicies.availability.staleTime,
+    refetchOnMount: "always",
+    refetchInterval: queryPolicies.availability.refetchInterval,
+    refetchIntervalInBackground: false,
   });
 }
+
 export function useOwnAvailability(enabled: boolean) {
   const { authenticated } = useUser();
+  const sessionId = getSessionSnapshot()?.sessionId;
   return useQuery<OwnAvailability>({
-    queryKey: ["availability", "me"],
-    enabled: enabled && authenticated,
-    queryFn: async () =>
-      (
-        await api.get("/appointments/availability/me")
-      ).data.data,
+    queryKey: availabilityKeys.own(sessionId),
+    enabled: enabled && authenticated && !!sessionId,
+    queryFn: async () => (await api.get("/appointments/availability/me")).data.data,
+    staleTime: queryPolicies.availability.staleTime,
+    refetchInterval: queryPolicies.availability.refetchInterval,
+    refetchIntervalInBackground: false,
   });
 }
+
 export function useBookingMutation<T>(run: (input: T) => Promise<unknown>) {
   const client = useQueryClient();
   return useMutation({
     mutationFn: run,
     onSuccess: async () => {
       await Promise.all([
-        client.invalidateQueries({ queryKey: ["availability"] }),
-        client.invalidateQueries({ queryKey: ["appointments"] }),
+        client.invalidateQueries({ queryKey: availabilityKeys.root }),
+        client.invalidateQueries({ queryKey: appointmentKeys.root }),
       ]);
+    },
+    onError: async (error) => {
+      if (isAxiosError(error) && error.response?.status === 409) {
+        await client.invalidateQueries({ queryKey: availabilityKeys.root });
+      }
     },
   });
 }

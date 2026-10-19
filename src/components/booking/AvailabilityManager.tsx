@@ -29,15 +29,25 @@ export function AvailabilityManager() {
     return (
       <p role="alert">
         Erro ao carregar expediente.{" "}
-        <button onClick={() => query.refetch()}>Tentar novamente</button>
+        <button disabled={query.isFetching} onClick={() => query.refetch()}>Tentar novamente</button>
       </p>
     );
   return (
-    <AvailabilityEditor
-      initial={query.data.schedules}
-      timezone={query.data.timezone}
-      timeOffs={query.data.timeOffs}
-    />
+    <div className="space-y-4">
+      {query.isError && (
+        <p role="alert">
+          Não foi possível atualizar o expediente. Os dados exibidos podem estar desatualizados.{" "}
+          <button disabled={query.isFetching} onClick={() => query.refetch()}>
+            Tentar novamente
+          </button>
+        </p>
+      )}
+      <AvailabilityEditor
+        initial={query.data.schedules}
+        timezone={query.data.timezone}
+        timeOffs={query.data.timeOffs}
+      />
+    </div>
   );
 }
 function AvailabilityEditor({
