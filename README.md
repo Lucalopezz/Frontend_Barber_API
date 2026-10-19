@@ -7,7 +7,7 @@
 > preservada abaixo. Veja o [ambiente e estado atual](./docs/estado-atual.md)
 > para executar com pnpm e conhecer as limitações reais.
 
-O [CI do frontend](./docs/ci-frontend.md) automatiza lint, build e testes de interface com API controlada em pull requests e pushes na `main`. A integração com API/PostgreSQL reais tem [procedimento próprio](./tests/integration/README.md).
+O [CI do frontend](./docs/ci-frontend.md) automatiza lint, build e testes de interface com API controlada em pull requests e pushes na `main`. A integração com API/PostgreSQL reais tem [procedimento próprio](./tests/integration/README.md). Para entender branches, PRs, `gh` e as automações, leia o [fluxo Git/GitHub/Actions](./docs/fluxo-git-github-actions.md).
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
