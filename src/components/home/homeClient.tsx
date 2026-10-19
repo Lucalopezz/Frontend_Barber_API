@@ -60,7 +60,9 @@ export const HomeClient = () => {
         </div>
         {isError && (
           <p role="alert">
-            Não foi possível carregar as barbearias.{" "}
+            {data
+              ? "Não foi possível atualizar as barbearias. Os dados exibidos podem estar desatualizados. "
+              : "Não foi possível carregar as barbearias. "}
             <button className="underline" onClick={() => refetch()}>
               Tentar novamente
             </button>
