@@ -160,7 +160,11 @@ function networkFailure() {
 function expired(generation: string, notify: boolean) {
   if (!current(generation)) return;
   if (notify) sessionStorage.setItem('sessionExpired', 'true');
-  const next = { ...read(), sessionId: undefined, discardDraft: false, discoveryAllowed: false, generation: crypto.randomUUID() };
+  const latest = read();
+  const next = { ...latest, sessionId: undefined, discardDraft: false, discoveryAllowed: false,
+    // A failed anonymous bootstrap has no identity to invalidate. Keeping its generation
+    // lets a login already queued behind that refresh proceed.
+    generation: latest.sessionId || notify ? crypto.randomUUID() : latest.generation };
   persist(next);
   return next.generation;
 }

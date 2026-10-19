@@ -120,6 +120,31 @@ test("login fields have accessible labels and autofill metadata", async ({
   );
 });
 
+test(
+  "login submitted during an anonymous session check is not cancelled",
+  async ({ page }) => {
+    const held = deferred();
+    const started = deferred();
+    await page.route("**/api/v1/auth/refresh", async (route) => {
+      started.resolve();
+      await held.promise;
+      await respond(route, 401, { code: "AUTH_SESSION_INVALID" });
+    });
+    await started.promise;
+    await page.getByPlaceholder("seu@exemplo.com").fill(accounts.a.email);
+    await page.getByPlaceholder("••••••••").fill(password);
+    const button = page.getByRole("button", { name: /^Entr/ });
+    const submission = button.click();
+    await expect(button).toBeDisabled();
+    held.resolve();
+    await submission;
+    await expect(page).toHaveURL(/\/$/);
+    await expect(
+      page.getByRole("heading", { name: "Encontre uma Barbearia" }),
+    ).toBeVisible();
+  },
+);
+
 test("pending login disables resubmission and recovers after a rejected request", async ({
   page,
 }) => {
