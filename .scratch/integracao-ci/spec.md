@@ -1,6 +1,6 @@
 # CI de integração entre frontend e backend
 
-Status: implementado e validado localmente em 18/10/2026; validação e publicação nos dois repositórios em andamento. Decisões confirmadas pelo usuário. Contrato compartilhado em [contrato.md](contrato.md) e evidências em [validacao.md](validacao.md).
+Status: concluído e validado localmente e no GitHub em 19/10/2026; publicado e mergeado nos dois repositórios. Decisões confirmadas pelo usuário. Contrato compartilhado em [contrato.md](contrato.md) e evidências em [validacao.md](validacao.md).
 
 ## Problema
 
