@@ -1,6 +1,6 @@
 # Validação — política de cache de consultas
 
-Status: implementação local concluída e publicada; integração/merge pendentes dos checks remotos do refresh-base. Evidência RED/GREEN e os gates abaixo correspondem às alterações locais em `feat/cache-consultas`.
+Status: implementação concluída e integrada à `main` pelo [PR #6](https://github.com/Lucalopezz/Frontend_Barber_API/pull/6), merge `26d0b9c`, após checks aprovados. A evidência RED/GREEN abaixo registra a implementação inicial; após atualizar a branch sobre o refresh aprovado, lint, build e 78/78 testes de interface passaram, além do check integrado do PR.
 
 ## RED/GREEN observado
 
@@ -23,7 +23,7 @@ Checkout `.worktrees/cache-front`, branch `feat/cache-consultas`, HEAD `ccd8d522
 
 A suíte integrada real valida a compatibilidade do frontend/cache sobre o par de sessões publicado; não é uma medição de cache em produção nem substitui os testes de rede controlada da UI.
 
-## Publicação e pendências remotas
+## Publicação: fotografia anterior ao merge
 
 - Branch cache publicada: [`feat/cache-consultas`](https://github.com/Lucalopezz/Frontend_Barber_API/tree/feat/cache-consultas), HEAD acima. Commits de implementação: `5201098`, `2fb7466`, `3dbefe2`, `ccd8d52`; contrato: `8b73161`.
 - PR backend refresh #3: https://github.com/Lucalopezz/Projeto_Barber_API/pull/3. Na última consulta registrada, `Architecture, lint, build and tests` e `Frontend and API / Jornada com API e PostgreSQL` estavam pending; GitGuardian passou.

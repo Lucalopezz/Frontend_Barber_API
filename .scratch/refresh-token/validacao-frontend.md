@@ -1,6 +1,6 @@
 # Validação frontend — sessões e refresh token
 
-Status: validação local concluída e branch publicada; checks remotos ainda pendentes. Esta evidência complementa `validacao-integracao.md`, cujo registro de preparação/RED é histórico e anterior ao GREEN do par atualizado.
+Status: entrega integrada à `main` dos dois repositórios após checks remotos aprovados. Esta evidência complementa `validacao-integracao.md`, cujo registro de preparação/RED é histórico e anterior ao GREEN do par atualizado.
 
 ## Evidência local
 
@@ -9,7 +9,11 @@ Status: validação local concluída e branch publicada; checks remotos ainda pe
 - A suíte integrada real `pnpm test:integration` passou **7/7**, sem retries, com API e PostgreSQL reais: jornada de booking original, login/restauração, renovação coalescida entre abas, logout offline, replay, CSRF e resposta de logout atrasada. O teste de duas abas comprova coalescência para o access rejeitado compartilhado; não afirma expiração JWT real do backend pelo relógio do navegador.
 - A API nova com o frontend anterior também passou sua jornada original **1/1**, registrada em `validacao-integracao.md`.
 
-## Branches e checks remotos
+## Publicação e checks remotos
+
+O backend foi integrado pelo [PR #3](https://github.com/Lucalopezz/Projeto_Barber_API/pull/3), merge `b761ab6`; o frontend pelo [PR #5](https://github.com/Lucalopezz/Frontend_Barber_API/pull/5), merge `abfc1a1`. O CI do frontend inicialmente encontrou uma corrida entre bootstrap anônimo e login. A correção `ad337bc` incluiu regressão RED/GREEN; lint, build, 68/68 testes de interface, integração e checks do PR passaram antes do merge.
+
+Os itens abaixo registram a fotografia anterior à conclusão dos PRs:
 
 - Backend refresh: `feat/refresh-sessions-api`, `7e49cea54c3df7ebc088c3fb7f6c62bb2915cdb3`, PR #3: https://github.com/Lucalopezz/Projeto_Barber_API/pull/3.
 - Frontend refresh: `feat/refresh-sessions-ui`, `cf1c40cbdf34d3f7e54c386fc517f5ac3b2bac08`, workflow pareado com peer backend `7e49cea`: https://github.com/Lucalopezz/Frontend_Barber_API/actions/runs/39282542008.
