@@ -1,6 +1,6 @@
 # Política de cache de consultas do frontend
 
-Status: implementação local concluída e publicada em `feat/cache-consultas` (`ccd8d522342eea7fdbee72d9ed67ae31b3908fc3`). Gates locais registrados em [validacao.md](validacao.md) estão verdes; CI remoto e integração do refresh-base permanecem pendentes. Merge não realizado.
+Status: concluída, validada e integrada à `main` do frontend pelo [PR #6](https://github.com/Lucalopezz/Frontend_Barber_API/pull/6), merge `26d0b9c`. Lint, build, 78/78 testes de interface e checks do PR passaram; a jornada real com API/PostgreSQL passou 7/7. Consulte [validacao.md](validacao.md).
 
 ## Problema
 

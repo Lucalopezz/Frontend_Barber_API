@@ -1,6 +1,6 @@
 # Validação integrada de sessões — preparação
 
-Status: RED funcional observado contra o par anterior; GREEN pendente da integração das implementações novas. O coordenador liberou o schema exclusivamente para esta execução, e o runner iniciou/encerrou sua própria API e Vite.
+Status: registro histórico da preparação e do RED funcional contra o par anterior. O GREEN posterior da integração real foi 7/7; consulte [validacao-frontend.md](validacao-frontend.md). O coordenador liberou o schema exclusivamente para esta execução, e o runner iniciou/encerrou sua própria API e Vite.
 
 Checkout de teste: `.worktrees/refresh-verification`, branch `test/refresh-session-browser`, base frontend `31d64dd9b0adf55b0276b7b1155c202e4018ebb2`. Contrato consultado no backend `.scratch/refresh-token/contrato.md`, revisão `30578e1`.
 
