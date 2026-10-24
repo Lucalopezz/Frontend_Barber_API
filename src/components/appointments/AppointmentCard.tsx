@@ -1,18 +1,21 @@
 import { appointmentStatus } from "@/utils/appointmentStatus";
 import { Calendar, Clock } from "lucide-react";
 import type { Appointment } from "@/types/appointment.type";
-import type { Role } from "@/types/user.type";
+import type { User } from "@/types/user.type";
 import { AppointmentActionsClient } from "./AppointmentActionsClient";
 import { AppointmentActionsBarber } from "./AppointmentActionsBarber";
 
 export const AppointmentCard = ({
   appointment,
-  role,
+  user,
 }: {
   appointment: Appointment;
-  role?: Role;
+  user?: User;
 }) => {
   const date = new Date(appointment.date);
+  const isAssignedProfessional =
+    (user?.role === "barber" || user?.role === "owner") &&
+    appointment.barberId === user.id;
 
   return (
     <div className="border rounded-xl p-5 sm:p-6 bg-white space-y-5 min-w-0">
@@ -37,14 +40,19 @@ export const AppointmentCard = ({
         </span>
       </div>
 
-      {role === "client" && appointment.status === "scheduled" && (
+      {user?.role === "client" && appointment.status === "scheduled" && (
         <AppointmentActionsClient appointment={appointment} />
       )}
 
-      {(role === "barber" || role === "owner") &&
-        appointment.status === "scheduled" && (
-          <AppointmentActionsBarber appointment={appointment} />
-        )}
+      {user?.role === "owner" && !isAssignedProfessional && (
+        <p className="text-sm text-muted-foreground">
+          Atendimento de outro profissional da equipe
+        </p>
+      )}
+
+      {isAssignedProfessional && appointment.status === "scheduled" && (
+        <AppointmentActionsBarber appointment={appointment} />
+      )}
     </div>
   );
 };

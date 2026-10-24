@@ -64,6 +64,7 @@ function AvailabilityEditor({
     reason: string | null;
   }[];
 }) {
+  const [view, setView] = useState<"hours" | "timeOffs">("hours");
   const [schedules, setSchedules] = useState<ScheduleDraft[]>(() =>
       initial.map((s) => ({
         dayOfWeek: s.dayOfWeek,
@@ -166,15 +167,20 @@ function AvailabilityEditor({
   }
   return (
     <section className="space-y-6 panel">
-      <h2 className="text-xl font-semibold">Expediente e folgas</h2>
-      <p className="text-sm text-muted-foreground">
-        Defina quando você atende. Dias sem intervalos ficam fechados. Horários
-        no fuso {timezone}.
-      </p>
+      <div>
+        <h2 className="text-xl font-semibold">Minha disponibilidade</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Horários no fuso {timezone}.</p>
+      </div>
+      <div className="shop-tabs" role="tablist" aria-label="Disponibilidade">
+        <button type="button" role="tab" aria-selected={view === "hours"} aria-controls="hours-panel" onClick={() => { setView("hours"); setMessage(""); }}>Expediente</button>
+        <button type="button" role="tab" aria-selected={view === "timeOffs"} aria-controls="time-off-panel" onClick={() => { setView("timeOffs"); setMessage(""); }}>Folgas</button>
+      </div>
       <p className="rounded-lg bg-secondary p-3 text-sm">
         Alterar o expediente ou adicionar folgas não cancela reservas
         existentes.
       </p>
+      {view === "hours" && <div id="hours-panel" role="tabpanel" className="space-y-4">
+      <p className="text-sm text-muted-foreground">Defina quando você atende. Dias sem intervalos ficam fechados.</p>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -261,6 +267,8 @@ function AvailabilityEditor({
           <Button disabled={mutation.isPending}>Salvar expediente</Button>
         </div>
       </form>
+      </div>}
+      {view === "timeOffs" && <div id="time-off-panel" role="tabpanel" className="space-y-4">
       <h3 className="font-semibold">Folgas</h3>
       <p>Informe o horário local da barbearia ({timezone}).</p>
       <ul className="space-y-2">
@@ -328,6 +336,7 @@ function AvailabilityEditor({
         </label>
         <Button disabled={mutation.isPending}>Adicionar folga</Button>
       </form>
+      </div>}
       {message && <p role={failed ? "alert" : "status"}>{message}</p>}
     </section>
   );

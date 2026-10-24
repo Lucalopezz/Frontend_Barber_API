@@ -2,10 +2,12 @@ import { Outlet } from "react-router-dom";
 import { Navbar } from "./components/layout/navbar";
 import { ToastContainer } from "react-toastify";
 import { useUser } from "./hooks/useUser";
+import { useGetUser } from "./hooks/queries/user/useGetUser";
 import { Footer } from "./components/layout/footer";
 
 export const App = () => {
   const { authenticated, logout } = useUser();
+  const { data: user } = useGetUser(false, false);
   return (
     <div className="flex min-h-dvh flex-col">
       <a
@@ -14,7 +16,7 @@ export const App = () => {
       >
         Pular para o conteúdo
       </a>
-      <Navbar isAuthenticated={authenticated} onLogout={logout} />
+      <Navbar isAuthenticated={authenticated} user={user} onLogout={logout} />
       <main
         id="main-content"
         className="app-shell flex-1 min-w-0 pb-6"

@@ -53,6 +53,8 @@ async function setup(
         timezone: shop.timezone,
         slots: [{ startsAt: slot, endsAt: "2030-10-21T12:30:00.000Z" }],
       };
+    else if (path.endsWith("/barber-shops/shop-1/barbers"))
+      data = [{ id: "owner", name: "Estudante", role: "owner" }];
     else if (path.endsWith("/appointments") && req.method() === "GET")
       return respond(route, {
         data: [
@@ -61,6 +63,7 @@ async function setup(
             date: slot,
             status,
             clientId: "client",
+            barberId: "owner",
             serviceId: service.id,
             barberShopId: shop.id,
           },
@@ -103,7 +106,7 @@ test("cliente encontra loja, reserva horário UTC e acompanha/cancela sem editar
     requests.find(
       (r) => r.method === "POST" && r.path.endsWith("/appointments"),
     )?.body,
-  ).toEqual({ serviceId: service.id, date: slot });
+  ).toEqual({ serviceId: service.id, date: slot, barberId: "owner" });
   await page.goto("/appointments");
   await expect(
     page.getByRole("button", { name: "Editar", exact: true }),
@@ -134,9 +137,10 @@ test("dono usa contexto próprio e configura expediente e folga", async ({
 }) => {
   const requests = await setup(page, "owner");
   await page.goto("/");
-  await page.getByRole("link", { name: "Gerenciar Barbearia" }).click();
+  await page.getByRole("link", { name: "Gerenciar expediente" }).click();
   await page.getByRole("button", { name: "Salvar expediente" }).click();
   await expect(page.getByRole("status")).toContainText("Expediente salvo");
+  await page.getByRole("tab", { name: "Folgas" }).click();
   await page.getByLabel("Início da folga").fill("2030-10-22T09:00");
   await page.getByLabel("Fim da folga").fill("2030-10-22T10:00");
   await page.getByRole("button", { name: "Adicionar folga" }).click();
@@ -235,6 +239,18 @@ test("dono remarca com slot retornado pela API e conclui atendimento", async ({
     page.getByRole("button", { name: "Concluir", exact: true }),
   ).toHaveCount(0);
 });
+test("dono vê reserva da equipe sem ações reservadas ao profissional atribuído", async ({ page }) => {
+  await setup(page, "owner");
+  await page.route(/\/api\/v1\/appointments(?:\?.*)?$/, (route) => {
+    if (route.request().method() !== "GET") return route.fallback();
+    return respond(route, { data: [{ id: "staff-appt", date: slot, status: "scheduled", clientId: "client", barberId: "staff", serviceId: service.id, barberShopId: shop.id }], meta: { lastPage: 1, total: 1 } });
+  });
+  await page.goto("/appointments");
+  await expect(page.getByText("Atendimento de outro profissional da equipe")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Concluir" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Remarcar" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Cancelar" })).toHaveCount(0);
+});
 test("folga existente pode ser removida e início posterior ao fim não envia pedido", async ({
   page,
 }) => {
@@ -255,7 +271,8 @@ test("folga existente pode ser removida e início posterior ao fim não envia pe
       },
     }),
   );
-  await page.goto("/barber-shop/shop-1");
+  await page.goto("/availability");
+  await page.getByRole("tab", { name: "Folgas" }).click();
   await page
     .getByLabel("Início da folga", { exact: true })
     .fill("2030-10-22T10:00");
@@ -345,7 +362,7 @@ test("fim do expediente preserva digitação parcial e aceita 24:00, mas bloquei
   page,
 }) => {
   const requests = await setup(page, "owner");
-  await page.goto("/barber-shop/shop-1");
+  await page.goto("/availability");
   const end = page.getByLabel("Fim expediente 1", { exact: true });
   await end.fill("");
   await end.pressSequentially("18:30");
@@ -408,11 +425,11 @@ test("barbeiro vinculado configura disponibilidade própria sem acesso à gestã
   await expect(
     page.getByRole("link", { name: "Gerenciar Barbearia" }),
   ).toHaveCount(0);
-  await expect(
-    page.getByRole("heading", { name: "Expediente e folgas" }),
-  ).toBeVisible();
+  await page.getByRole("link", { name: "Gerenciar expediente" }).click();
+  await expect(page.getByRole("heading", { name: "Meu expediente" })).toBeVisible();
   await page.getByRole("button", { name: "Salvar expediente" }).click();
   await expect(page.getByRole("status")).toContainText("Expediente salvo");
+  await page.getByRole("tab", { name: "Folgas" }).click();
   await page
     .getByLabel("Início da folga", { exact: true })
     .fill("2030-10-22T09:00");
@@ -495,7 +512,7 @@ test('resposta perdida reconcilia reserva e não repete a mutação',async({page
  await setup(page);let posts=0;
  await page.route(/\/api\/v1\/appointments(?:\?.*)?$/,route=>{
   if(route.request().method()==='POST'){posts++;return route.abort('failed');}
-  return respond(route,{data:[{id:'committed',date:slot,clientId:'client',serviceId:service.id,barberShopId:shop.id,status:'scheduled'}],meta:{lastPage:1,total:1}});
+  return respond(route,{data:[{id:'committed',date:slot,clientId:'client',barberId:'owner',serviceId:service.id,barberShopId:shop.id,status:'scheduled'}],meta:{lastPage:1,total:1}});
  });
  await page.goto('/book/shop-1');await selectSlot(page);
  await page.getByRole('button',{name:'Confirmar agendamento'}).click();
@@ -516,7 +533,7 @@ test('resultado incerto bloqueia reenvio inclusive após reload e preserva campo
 });
 test('remarcação do profissional com resposta perdida reconcilia pelo ID autorizado',async({page})=>{
  await setup(page,'owner');let puts=0;
- await page.route(/\/api\/v1\/appointments(?:\?.*)?$/,route=>respond(route,{data:[{id:'appt-1',date:slot,clientId:'client',serviceId:service.id,barberShopId:shop.id,status:'scheduled'}],meta:{lastPage:1,total:1}}));
+ await page.route(/\/api\/v1\/appointments(?:\?.*)?$/,route=>respond(route,{data:[{id:'appt-1',date:slot,clientId:'client',barberId:'owner',serviceId:service.id,barberShopId:shop.id,status:'scheduled'}],meta:{lastPage:1,total:1}}));
  await page.route('**/api/v1/appointments/appt-1',route=>{if(route.request().method()==='PUT'){puts++;return route.abort('failed');}return route.fallback();});
  await page.goto('/appointments');await page.getByRole('button',{name:'Remarcar',exact:true}).click();
  await page.getByLabel('Data',{exact:true}).fill('2030-10-21');await page.getByRole('button',{name:'09:00',exact:true}).click();
@@ -651,7 +668,7 @@ test('chaves de agendamentos e disponibilidade isolam identidade e todos os par�
 test('disponibilidade do profissional atualiza a cada 30 segundos enquanto a gestão está aberta', async ({ page }) => {
   await page.clock.install({ time: new Date("2030-10-15T12:00:00.000Z") });
   const requests = await setup(page, "owner");
-  await page.goto("/barber-shop/shop-1");
+  await page.goto("/availability");
   await expect.poll(() => requests.filter((r) => r.path === "/api/v1/appointments/availability/me").length).toBe(1);
   await page.clock.fastForward(30_000);
   await expect.poll(() => requests.filter((r) => r.path === "/api/v1/appointments/availability/me").length).toBe(2);
@@ -690,7 +707,7 @@ test('falha ao atualizar expediente informa dados antigos e preserva a edição 
     refreshRequests++;
     return failRefresh ? respond(route, { message: "offline" }, 503) : route.fallback();
   });
-  await page.goto("/barber-shop/shop-1");
+  await page.goto("/availability");
   await expect.poll(() => refreshRequests).toBe(1);
   await page.getByLabel("Início expediente 1", { exact: true }).fill("10:00");
   failRefresh = true;

@@ -55,6 +55,7 @@ async function chooseSlot(
 ) {
   await page.goto(`/book/${shopId}`);
   await page.getByLabel("Serviço", { exact: true }).selectOption(serviceId);
+  await expect(page.getByLabel("Profissional", { exact: true })).not.toHaveValue("");
   await page.getByLabel("Data", { exact: true }).fill(day);
   await page.getByRole("button", { name: hour, exact: true }).click();
 }
@@ -184,6 +185,7 @@ test("owner configures availability and clients book/cancel with real API, datab
     await ownerPage
       .getByRole("link", { name: "Gerenciar Barbearia", exact: true })
       .click();
+    await ownerPage.getByRole("navigation", { name: "Gestão da barbearia" }).getByRole("link", { name: "Serviços" }).click();
 
     await ownerPage
       .getByPlaceholder("Corte masculino")
@@ -207,6 +209,7 @@ test("owner configures availability and clients book/cancel with real API, datab
         originalToken,
     ).toBe(true);
 
+    await ownerPage.goto("/availability");
     await ownerPage
       .getByRole("button", { name: "Adicionar intervalo", exact: true })
       .click();
@@ -223,8 +226,9 @@ test("owner configures availability and clients book/cancel with real API, datab
       .getByRole("button", { name: "Salvar expediente", exact: true })
       .click();
     await expect(
-      ownerPage.locator("#shop-hours").getByRole("status"),
+      ownerPage.getByRole("status"),
     ).toContainText("Expediente salvo.");
+    await ownerPage.getByRole("tab", { name: "Folgas" }).click();
 
     await ownerPage
       .getByLabel("Início da folga", { exact: true })
@@ -266,7 +270,7 @@ test("owner configures availability and clients book/cancel with real API, datab
     ).toHaveCount(0);
     await ownerPage.getByRole("button", { name: /^Remover folga / }).click();
     await expect(
-      ownerPage.locator("#shop-hours").getByRole("status"),
+      ownerPage.getByRole("status"),
     ).toContainText("Folga removida.");
 
     await chooseSlot(clientPage, shopId, serviceId, "09:00");

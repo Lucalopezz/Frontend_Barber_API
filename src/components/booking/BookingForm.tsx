@@ -6,6 +6,7 @@ import { getIdentity, getSessionSnapshot, isCurrentIdentity, synchronizeIdentity
 import { useState } from "react";
 import { isAxiosError } from "axios";
 import { useListServices } from "@/hooks/queries/services/useListServices";
+import { useShopBarbers } from "@/hooks/queries/barberShops/useShopTeam";
 import {
   useBookingMutation,
   useSlots,
@@ -13,18 +14,18 @@ import {
 import { Button } from "@/components/ui/button";
 import api from "@/utils/api";
 import { Link } from "react-router-dom";
-interface BookingProps { shopId: string; appointmentId?: string; initialServiceId?: string }
+interface BookingProps { shopId: string; appointmentId?: string; initialServiceId?: string; initialBarberId?: string }
 export function BookingForm(props: BookingProps) {
   const user=useGetUser();
   if (!user.data) return <p role={user.isError ? 'alert' : 'status'}>Validando sua conta… {user.isError && <button onClick={()=>void user.refetch()}>Tentar novamente</button>}</p>;
   return <AccountBookingForm key={`${user.data.id}:${props.shopId}:${props.appointmentId??''}`} {...props} userId={user.data.id} />;
 }
-function AccountBookingForm({shopId,appointmentId,initialServiceId='',userId}:BookingProps & {userId:string}) {
+function AccountBookingForm({shopId,appointmentId,initialServiceId='',initialBarberId='',userId}:BookingProps & {userId:string}) {
   const [formGeneration] = useState(() => getIdentity().generation);
   const [draft,setDraft]=useState<BookingDraft>(()=>readDraft(userId,shopId,appointmentId)??{
-    version:1,userId,shopId,appointmentId,serviceId:initialServiceId,date:'',slot:''
+    version:1,userId,shopId,appointmentId,serviceId:initialServiceId,barberId:initialBarberId,date:'',slot:''
   });
-  const {serviceId,date,slot,uncertain}=draft;
+  const {serviceId,barberId,date,slot,uncertain}=draft;
   const [message,setMessage]=useState('');
   const [reconciled,setReconciled]=useState(false);
   const [reconciling,setReconciling]=useState(false);
@@ -33,12 +34,14 @@ function AccountBookingForm({shopId,appointmentId,initialServiceId='',userId}:Bo
     saveDraft(next); // Persist synchronously before auth transitions can unmount the route.
     setDraft(next);
   }
-  const services = useListServices(shopId),
-    slots = useSlots(shopId, serviceId, date);
+  const services = useListServices(shopId);
+  const barbers = useShopBarbers(shopId);
+  const selectedBarberId = barberId || (barbers.data?.length === 1 ? barbers.data[0].id : "");
+  const slots = useSlots(shopId, serviceId, date, selectedBarberId);
   const mutation = useBookingMutation<void>(async () => {
-    const input = { serviceId, date: slot };
+    const input = { serviceId, date: slot, barberId: selectedBarberId };
     if (appointmentId)
-      await api.put(`/appointments/${appointmentId}`, input);
+      await api.put(`/appointments/${appointmentId}`, { serviceId, date: slot });
     else await api.post("/appointments", input);
   });
   const pending = mutation.isPending || reconciling;
@@ -55,7 +58,7 @@ function AccountBookingForm({shopId,appointmentId,initialServiceId='',userId}:Bo
         lastPage=response.data.meta.lastPage;
       }
       if(!isCurrentIdentity(generation)) return;
-      const matching=reservations.filter(a=>(attempt.appointmentId || a.clientId===userId) && a.barberShopId===shopId && a.serviceId===attempt.serviceId &&
+      const matching=reservations.filter(a=>(attempt.appointmentId || a.clientId===userId) && a.barberShopId===shopId && a.serviceId===attempt.serviceId && (!attempt.barberId || a.barberId===attempt.barberId) &&
         new Date(a.date).getTime()===new Date(attempt.date).getTime() && a.status!=='cancelled' && (!attempt.appointmentId || a.id===attempt.appointmentId));
       if(matching.length===1) {
         update({uncertain:undefined,slot:''});setReconciled(true);setMessage('Agendamento confirmado após consultar suas reservas.');
@@ -67,10 +70,10 @@ function AccountBookingForm({shopId,appointmentId,initialServiceId='',userId}:Bo
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!isCurrentIdentity(formGeneration) || !getSessionSnapshot()) { synchronizeIdentity(); return; }
-    if (pending || !slot || uncertain || !slots.isSuccess || slots.isFetching || !slots.data?.slots.some(s=>s.startsAt===slot) || services.isError) return;
+    if (pending || !selectedBarberId || !slot || uncertain || !slots.isSuccess || slots.isFetching || !slots.data?.slots.some(s=>s.startsAt===slot) || services.isError || barbers.isError) return;
     setMessage('');setReconciled(false);
     const generation=getIdentity().generation;
-    const attempt={operationId:crypto.randomUUID(),generation,serviceId,date:slot,appointmentId};
+    const attempt={operationId:crypto.randomUUID(),generation,serviceId,barberId:selectedBarberId,date:slot,appointmentId};
     update({uncertain:attempt}); // Reload while a mutation is in flight must also prevent blind resubmission.
     try {
       await mutation.mutateAsync(undefined);
@@ -94,10 +97,10 @@ function AccountBookingForm({shopId,appointmentId,initialServiceId='',userId}:Bo
   return (
     <form onSubmit={submit} aria-busy={pending} className="space-y-6 panel">
       <h2 className="text-xl font-semibold">
-        {appointmentId ? "Remarcar agendamento" : "Escolha serviço e horário"}
+        {appointmentId ? "Remarcar agendamento" : "Escolha seu atendimento"}
       </h2>
       <p className="text-sm text-muted-foreground">
-        Escolha o serviço e a data para ver os horários disponíveis.
+        Escolha o serviço, o profissional e a data para ver os horários disponíveis.
       </p>
       {services.isLoading && <p>Carregando serviços…</p>}
       {services.isError && (
@@ -137,6 +140,23 @@ function AccountBookingForm({shopId,appointmentId,initialServiceId='',userId}:Bo
           ))}
         </select>
       </label>
+      <label className="block">
+        Profissional
+        <select
+          aria-label="Profissional"
+          className="mt-2 block w-full"
+          required
+          disabled={pending || !!uncertain || !!appointmentId}
+          value={selectedBarberId}
+          onChange={(event) => { update({barberId:event.target.value,slot:""}); setMessage(""); }}
+        >
+          <option value="">Selecione</option>
+          {barbers.data?.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}{barber.role === "owner" ? " (proprietário)" : ""}</option>)}
+        </select>
+      </label>
+      {barbers.isLoading && <p role="status">Carregando profissionais…</p>}
+      {barbers.isError && <p role="alert">Não foi possível carregar os profissionais. <button type="button" className="underline" onClick={() => void barbers.refetch()}>Tentar novamente</button></p>}
+      {barbers.data?.length === 0 && <p>Esta barbearia ainda não tem profissionais disponíveis.</p>}
       <label className="block">
         Data
         <input
@@ -199,7 +219,7 @@ function AccountBookingForm({shopId,appointmentId,initialServiceId='',userId}:Bo
       </details>
       <Button
         className="w-full sm:w-auto"
-        disabled={pending || !!uncertain || !slot || slots.isFetching || slots.isError || services.isError || !slots.data?.slots.some(s=>s.startsAt===slot)}
+        disabled={pending || !!uncertain || !selectedBarberId || !slot || slots.isFetching || slots.isError || services.isError || barbers.isError || !slots.data?.slots.some(s=>s.startsAt===slot)}
         type="submit"
       >
         {pending

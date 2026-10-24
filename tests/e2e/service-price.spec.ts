@@ -45,9 +45,9 @@ async function openManagement(page: Page) {
     }
     await route.fulfill({ json: { data, meta: { lastPage: 1, total: 1 } } });
   });
-  await page.goto("/barber-shop/shop-1");
+  await page.goto("/barber-shop/shop-1/services");
   await expect(
-    page.getByRole("heading", { name: "Gerenciar Barbearia" }),
+    page.getByRole("heading", { name: "Sua barbearia" }),
   ).toBeVisible();
   return writes;
 }
@@ -130,6 +130,8 @@ test("aviso de exclusão descreve o efeito real sem dizer que apaga o perfil do 
   page,
 }) => {
   await openManagement(page);
+  await page.getByRole("navigation", { name: "Gestão da barbearia" }).getByRole("link", { name: "Dados" }).click();
+  await page.getByText("Excluir barbearia", { exact: true }).first().click();
   await expect(
     page.getByText(
       "Seu perfil permanece. Barbearias com agendamentos não podem ser excluídas.",

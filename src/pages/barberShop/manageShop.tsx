@@ -1,92 +1,116 @@
-import { AvailabilityManager } from "@/components/booking/AvailabilityManager";
 import { useGetUser } from "@/hooks/queries/user/useGetUser";
 import { ShopDangerZone } from "@/components/barberShop/ShopDangerZone";
 import { ShopServices } from "@/components/barberShop/ShopServices";
 import { ShopUpdateForm } from "@/components/barberShop/ShopUpdateForm";
+import { ShopTeam } from "@/components/barberShop/ShopTeam";
 import { useGetBarberShop } from "@/hooks/queries/barberShops/useGetBarberShop";
-import { Link, useParams } from "react-router-dom";
-export const ShopManagementPage = () => {
+import { Link, NavLink, useParams } from "react-router-dom";
+
+export type ShopSection = "details" | "services" | "team";
+
+export const ShopManagementPage = ({
+  section = "details",
+}: {
+  section?: ShopSection;
+}) => {
   const { id } = useParams();
   const user = useGetUser();
   const { data, isLoading, error, refetch } = useGetBarberShop(id);
-  if (isLoading)
+  if (isLoading || user.isLoading)
     return (
       <p className="page-section" role="status">
         Carregando barbearia…
       </p>
     );
-  if (!data)
+  if (!data || !user.data)
     return (
       <p className="page-section" role="alert">
-        Erro ao carregar barbearia. {" "}
-        <button className="underline" onClick={() => void refetch()}>Tentar novamente</button>
-      </p>
-    );
-  if (user.isLoading)
-    return <p className="page-section">Carregando usuário…</p>;
-  if (!user.data)
-    return (
-      <p className="page-section" role="alert">
-        Não foi possível confirmar o contexto da conta. {" "}
-        <button className="underline" onClick={() => void user.refetch()}>Tentar novamente</button>
+        Não foi possível carregar a barbearia.{" "}
+        <button
+          className="underline"
+          onClick={() => {
+            void refetch();
+            void user.refetch();
+          }}
+        >
+          Tentar novamente
+        </button>
       </p>
     );
   if (
-    user.data?.barberShop?.id !== id ||
-    user.data?.barberShop?.relationship !== "owner"
+    user.data.barberShop?.id !== id ||
+    user.data.barberShop?.relationship !== "owner"
   )
-    return <p role="alert">Você não pode gerenciar esta barbearia.</p>;
+    return (
+      <p className="page-section" role="alert">
+        Você não pode gerenciar esta barbearia.
+      </p>
+    );
+
+  const base = `/barber-shop/${data.id}`;
   return (
-    <div className="page-section space-y-8">
-      <header>
+    <div className="page-section mx-auto max-w-5xl space-y-8">
+      <header className="space-y-3 border-b pb-6">
         <Link
           to="/"
-          className="mb-4 inline-block text-sm text-muted-foreground underline"
+          className="text-sm text-muted-foreground underline underline-offset-4"
         >
-          Voltar ao início
+          Voltar à visão geral
         </Link>
-        <h1 className="page-title">Gerenciar Barbearia</h1>
-        <p className="mt-3 text-lg font-semibold">{data.name}</p>
-        <p className="text-sm text-muted-foreground break-words">
-          {data.address}
-        </p>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="page-title">Sua barbearia</h1>
+            <p className="mt-2 text-lg font-semibold">{data.name}</p>
+          </div>
+          <p className="max-w-sm break-words text-sm text-muted-foreground">
+            {data.address}
+          </p>
+        </div>
       </header>
-      {error && (
+      {(error || user.error) && (
         <p role="alert">
-          Não foi possível atualizar os dados desta barbearia. Os dados exibidos podem estar desatualizados. {" "}
-          <button className="underline" onClick={() => void refetch()}>Tentar novamente</button>
+          Os dados podem estar desatualizados.{" "}
+          <button
+            className="underline"
+            onClick={() => {
+              void refetch();
+              void user.refetch();
+            }}
+          >
+            Atualizar
+          </button>
         </p>
       )}
-      {user.error && (
-        <p role="alert">
-          Não foi possível atualizar o contexto da conta. As permissões exibidas podem estar desatualizadas. {" "}
-          <button className="underline" onClick={() => void user.refetch()}>Tentar novamente</button>
-        </p>
-      )}
-      <nav
-        aria-label="Seções da barbearia"
-        className="flex flex-wrap gap-2 border-y py-3"
-      >
-        <a className="site-nav-link" href="#shop-details">
-          Dados da barbearia
-        </a>
-        <a className="site-nav-link" href="#shop-services">
-          Serviços
-        </a>
-        <a className="site-nav-link" href="#shop-hours">
-          Expediente e folgas
-        </a>
+      <nav aria-label="Gestão da barbearia" className="shop-tabs">
+        <NavLink to={base} end>
+          Dados
+        </NavLink>
+        <NavLink to={`${base}/services`}>Serviços</NavLink>
+        <NavLink to={`${base}/team`}>Equipe</NavLink>
       </nav>
-      <div id="shop-details">
-        <ShopUpdateForm shop={data} />
-      </div>
-      <div id="shop-services">
-        <ShopServices barberShopId={data.id} />
-      </div>
-      <div id="shop-hours">
-        <AvailabilityManager />
-      </div>
-      <ShopDangerZone shop={data} />
+      {section === "details" && (
+        <div className="space-y-8">
+          <section aria-labelledby="shop-data-title" className="space-y-4">
+            <div>
+              <h2 id="shop-data-title" className="section-title">
+                Dados da barbearia
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Nome e endereço exibidos para os clientes.
+              </p>
+            </div>
+            <ShopUpdateForm shop={data} />
+          </section>
+          <details className="rounded-xl border border-border bg-white p-5 text-sm">
+            <summary className="font-semibold">Excluir barbearia</summary>
+            <div className="mt-5">
+              <ShopDangerZone shop={data} />
+            </div>
+          </details>
+        </div>
+      )}
+      {section === "services" && <ShopServices barberShopId={data.id} />}
+      {section === "team" && <ShopTeam shopId={data.id} />}
     </div>
   );
 };
