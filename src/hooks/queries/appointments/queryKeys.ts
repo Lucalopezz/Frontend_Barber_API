@@ -9,6 +9,6 @@ export const appointmentKeys = {
 export const availabilityKeys = {
   root: ["availability"] as const,
   own: (sessionId: string | undefined) => ["availability", sessionId, "me"] as const,
-  shop: (sessionId: string | undefined, shopId: string, serviceId: string, date: string) =>
-    ["availability", sessionId, "shop", shopId, { serviceId, date }] as const,
+  shop: (sessionId: string | undefined, shopId: string, serviceId: string, date: string, barberId = "") =>
+    ["availability", sessionId, "shop", shopId, { serviceId, date, barberId }] as const,
 };

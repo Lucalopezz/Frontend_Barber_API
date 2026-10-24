@@ -4,6 +4,7 @@ export type Appointment = {
   status: AppointmentStatus;
   clientId: string;
   serviceId: string;
+  barberId: string;
   barberShopId: string;
   createdAt?: Date;
 };

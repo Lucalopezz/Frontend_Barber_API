@@ -25,6 +25,12 @@ async function setup(page: Page, role: "client" | "owner") {
         barberShop:
           role === "owner" ? { ...shop, relationship: "owner" } : null,
       };
+    else if (path.endsWith("/barber-shops/shop-1/barbers"))
+      data = [
+        { id: "user-1", name: "Lucas Lopes", role: "owner" },
+        { id: "barber-2", name: "Ana Souza", role: "barber" },
+      ];
+    else if (path.endsWith("/barber-shops/shop-1/invitations")) data = [];
     else if (path.endsWith("/barber-shops/shop-1")) data = shop;
     else if (path.endsWith("/barber-shops"))
       data = [
@@ -87,7 +93,9 @@ for (const width of [360, 768, 1440]) {
     await mkdir("output/playwright", { recursive: true });
     for (const [path, heading, name] of [
       ["/", "Seu salão, em dia.", "owner"],
-      ["/barber-shop/shop-1", "Gerenciar Barbearia", "management"],
+      ["/barber-shop/shop-1/services", "Sua barbearia", "management"],
+      ["/barber-shop/shop-1/team", "Sua barbearia", "team"],
+      ["/availability", "Meu expediente", "availability"],
       ["/appointments", "Agendamentos", "appointments"],
       ["/profile", "Minha conta", "profile"],
     ]) {
@@ -128,11 +136,11 @@ for (const width of [360, 768, 1440]) {
         name: "Navegação no celular",
       });
       await expect(nav).toBeVisible();
-      await nav.getByRole("link", { name: "Agendamentos" }).click();
+      await nav.getByRole("link", { name: "Agenda" }).click();
       await expect(page).toHaveURL(/\/appointments$/);
       await page.getByRole("button", { name: "Abrir menu da conta" }).click();
       await expect(
-        page.getByRole("menuitem", { name: "Meu Perfil" }),
+        page.getByRole("menuitem", { name: "Minha conta" }),
       ).toBeVisible();
     }
   });

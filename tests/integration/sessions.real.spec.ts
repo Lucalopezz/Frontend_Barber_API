@@ -226,7 +226,7 @@ test("two real tabs coalesce rejected-token refresh and synchronize logout", asy
     );
     await Promise.all([first, second].map((page) =>
       page.getByRole("navigation", { name: "Navegação principal" })
-        .getByRole("link", { name: "Agendamentos", exact: true }).click(),
+        .getByRole("link", { name: "Meus horários", exact: true }).click(),
     ));
     await Promise.all(appointmentsLoaded);
     await expect(first).toHaveURL(`${origin}/appointments`);

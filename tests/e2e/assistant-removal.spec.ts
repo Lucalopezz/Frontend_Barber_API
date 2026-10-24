@@ -30,7 +30,7 @@ for (const width of [360, 1440]) {
     await page.goto("/");
     await page.getByRole("button", { name: "Abrir menu da conta" }).click();
     await expect(
-      page.getByRole("menuitem", { name: "Meu Perfil" }),
+      page.getByRole("menuitem", { name: "Minha conta" }),
     ).toBeVisible();
     await expect(
       page.getByRole("menuitem", { name: /assistente/i }),
@@ -41,7 +41,7 @@ for (const width of [360, 1440]) {
     const navigation = page.getByRole("navigation", {
       name: width === 360 ? "Navegação no celular" : "Navegação principal",
     });
-    await navigation.getByRole("link", { name: "Agendamentos" }).click();
+    await navigation.getByRole("link", { name: "Meus horários" }).click();
     await expect(page).toHaveURL(/\/appointments$/);
     await expect(
       page.getByRole("heading", { name: "Agendamentos", exact: true }),

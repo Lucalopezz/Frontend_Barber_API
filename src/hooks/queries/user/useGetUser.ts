@@ -6,7 +6,7 @@ import type { User } from "@/types/user.type";
 import api from "@/utils/api";
 import { useQuery } from "@tanstack/react-query";
 
-export const useGetUser = () => {
+export const useGetUser = (refetchOnMount: boolean | "always" = "always", fetch = true) => {
   const { authenticated } = useUser();
   const identity = getIdentity();
   return useQuery<User>({
@@ -18,9 +18,9 @@ export const useGetUser = () => {
       discardOtherAccountDraft(data.data.id);
       return data.data;
     },
-    enabled: authenticated,
+    enabled: authenticated && fetch,
     staleTime: 0,
-    refetchOnMount: "always",
+    refetchOnMount,
     refetchOnWindowFocus: true,
   });
 };

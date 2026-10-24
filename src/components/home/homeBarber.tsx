@@ -1,4 +1,3 @@
-import { AvailabilityManager } from "@/components/booking/AvailabilityManager";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useListAppointments } from "@/hooks/queries/appointments/useListAppointments";
@@ -10,6 +9,7 @@ import { CreateBarberShopDialog } from "./createShopDialog";
 import { useCreateBarberShop } from "@/hooks/queries/barberShops/useCreateBarberShop";
 import { showToast } from "@/utils/toast";
 import { appointmentStatus } from "@/utils/appointmentStatus";
+import { MyInvitations } from "@/components/barberShop/MyInvitations";
 
 export const HomeBarber = ({ user }: { user: User }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -146,7 +146,16 @@ export const HomeBarber = ({ user }: { user: User }) => {
           )}
         </section>
       </div>
-      {myShop?.relationship === "barber" && <AvailabilityManager />}
+      {!myShop && user.role === "barber" && <MyInvitations />}
+      {myShop && (
+        <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-white px-6 py-5">
+          <div>
+            <h2 className="font-semibold">Seu expediente</h2>
+            <p className="text-sm text-muted-foreground">Ajuste os horários em que você atende e cadastre suas folgas.</p>
+          </div>
+          <Button asChild variant="outline"><Link to="/availability">Gerenciar expediente</Link></Button>
+        </section>
+      )}
     </div>
   );
 };

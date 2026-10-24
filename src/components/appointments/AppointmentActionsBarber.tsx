@@ -55,6 +55,7 @@ export const AppointmentActionsBarber = ({
           shopId={appointment.barberShopId}
           appointmentId={appointment.id}
           initialServiceId={appointment.serviceId}
+          initialBarberId={appointment.barberId}
         />
       )}
     </div>

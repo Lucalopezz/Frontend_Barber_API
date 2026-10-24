@@ -21,7 +21,9 @@ Celular: [marca                              conta]
 
 ## Conteúdo
 
-Uma ação principal por seção. Rótulos em português; estados de agendamento traduzidos. Políticas aparecem onde ajudam a decidir, com detalhes expansíveis. Não prometer favoritos, avaliações, notificações ou profissionais selecionáveis que o produto não implementa.
+Uma ação principal por seção. Rótulos em português; estados de agendamento traduzidos. Políticas aparecem onde ajudam a decidir, com detalhes expansíveis. A reserva agora seleciona um profissional da equipe; não prometer favoritos, avaliações ou notificações que o produto não implementa.
+
+Gestão da barbearia usa destinos separados para dados, serviços e equipe. Expediente e folgas ficam em uma página própria do profissional, com duas abas. A navegação principal muda conforme o papel da conta; no celular há no máximo quatro destinos fixos. A conta deixa de duplicar a lista de agendamentos.
 
 O assistente experimental foi removido, incluindo o acesso pela conta e a tela. A jornada principal usa catálogo → serviço → data → horário. O endereço antigo `/assistant` usa o tratamento existente de página inexistente.
 

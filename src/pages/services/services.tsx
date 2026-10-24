@@ -19,7 +19,7 @@ export const Services = () => (
         <ol className="mt-5 list-decimal space-y-4 pl-5 text-sm text-muted-foreground">
           <li>Crie sua conta de cliente e entre.</li>
           <li>Encontre a barbearia e toque em Agendar.</li>
-          <li>Escolha o serviço, a data e um horário disponível.</li>
+          <li>Escolha o serviço, o profissional, a data e um horário disponível.</li>
           <li>Confirme e acompanhe em Agendamentos.</li>
         </ol>
         <p className="mt-6 border-t pt-4 text-sm">
@@ -34,9 +34,9 @@ export const Services = () => (
         <h2 className="section-title">Quero atender</h2>
         <ol className="mt-5 list-decimal space-y-4 pl-5 text-sm text-muted-foreground">
           <li>Crie sua conta como barbeiro.</li>
-          <li>Cadastre sua barbearia com nome e endereço.</li>
-          <li>Adicione serviços, valores e duração.</li>
-          <li>Defina seu expediente e acompanhe os atendimentos na agenda.</li>
+          <li>Cadastre sua barbearia ou aceite um convite para entrar em uma equipe.</li>
+          <li>Como proprietário, adicione serviços, valores e duração.</li>
+          <li>Defina seu próprio expediente e acompanhe os atendimentos na agenda.</li>
         </ol>
         <p className="mt-6 border-t pt-4 text-sm">
           Cadastre folgas para fechar horários sem alterar reservas existentes.

@@ -45,7 +45,7 @@ async function openProfile(page: Page) {
   await page
     .getByRole("button", { name: "Abrir menu da conta", exact: true })
     .click();
-  await page.getByRole("menuitem", { name: "Meu Perfil", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Minha conta", exact: true }).click();
 }
 
 async function logout(page: Page) {

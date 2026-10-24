@@ -26,16 +26,16 @@ export interface OwnAvailability {
   }[];
 }
 
-export function useSlots(shopId: string, serviceId: string, date: string) {
+export function useSlots(shopId: string, serviceId: string, date: string, barberId: string) {
   const { authenticated } = useUser();
   const sessionId = getSessionSnapshot()?.sessionId;
   return useQuery<Availability>({
-    queryKey: availabilityKeys.shop(sessionId, shopId, serviceId, date),
-    enabled: authenticated && !!sessionId && !!shopId && !!serviceId && !!date,
+    queryKey: availabilityKeys.shop(sessionId, shopId, serviceId, date, barberId),
+    enabled: authenticated && !!sessionId && !!shopId && !!serviceId && !!date && !!barberId,
     queryFn: async () =>
       (
         await api.get(`/barber-shops/${shopId}/availability`, {
-          params: { serviceId, date },
+          params: { serviceId, date, barberId },
         })
       ).data.data,
     staleTime: queryPolicies.availability.staleTime,

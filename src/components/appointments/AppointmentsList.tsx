@@ -56,7 +56,7 @@ export const AppointmentsList = ({ user, data, isLoading, isFetching, error, onR
         </p>
       )}
       {appointments.map((appointment) => (
-        <AppointmentCard key={appointment.id} appointment={appointment} role={user?.role} />
+        <AppointmentCard key={appointment.id} appointment={appointment} user={user} />
       ))}
     </div>
   );

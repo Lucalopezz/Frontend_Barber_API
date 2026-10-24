@@ -11,6 +11,7 @@ import { Services } from "@/pages/services/services";
 import { Profile } from "@/pages/user/profile";
 import { ShopManagementPage } from "@/pages/barberShop/manageShop";
 import { Appointments } from "@/pages/appointments/appointments";
+import { AvailabilityPage } from "@/pages/appointments/availability";
 
 export const routes = createBrowserRouter([
   {
@@ -65,6 +66,18 @@ export const routes = createBrowserRouter([
             <ShopManagementPage />
           </PrivateRoute>
         ),
+      },
+      {
+        path: "/barber-shop/:id/services",
+        element: <PrivateRoute><ShopManagementPage section="services" /></PrivateRoute>,
+      },
+      {
+        path: "/barber-shop/:id/team",
+        element: <PrivateRoute><ShopManagementPage section="team" /></PrivateRoute>,
+      },
+      {
+        path: "/availability",
+        element: <PrivateRoute><AvailabilityPage /></PrivateRoute>,
       },
       {
         path: "/appointments",
