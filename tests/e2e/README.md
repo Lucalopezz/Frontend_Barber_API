@@ -35,3 +35,13 @@ Políticas: `booking.spec.ts` congela o relógio para manter as reservas no futu
 ## Sessões e refresh
 
 Os mocks de sessão retornam o contrato completo e simulam a recuperação por cookie; não usam mais token em localStorage. Os testes de autenticação verificam ausência de credenciais persistentes, bootstrap antes da rota protegida, duas abas com quatro requisições concorrentes e uma renovação efetiva, logout offline após reload, respostas antigas, saída durante login e login enfileirado antes de logout, cookies ambíguos e troca de senha sincronizada. Falhas de reserva cobrem criação e remarcação com resposta perdida, rascunho por identidade, revalidação e bloqueio durável de reenvio incerto. Consulte [sessões na interface](../../docs/sessoes-autenticacao.md).
+
+## Notificações — parte 1
+
+`notifications.spec.ts` cobre confirmação no fuso da barbearia com navegador em UTC, link para a agenda, paginação, carregamento, caixa vazia, erro com nova tentativa e preservação da última consulta. Também verifica acesso anônimo sem chamada à API privada, troca de conta com resposta anterior atrasada e acesso pelo sino em 360 px sem rolagem horizontal. A tela consulta `GET /notifications` apenas quando autenticada e usa a sessão na chave de cache; não implementa leitura ou contador nesta etapa.
+
+```bash
+pnpm test:e2e tests/e2e/notifications.spec.ts --workers=1
+```
+
+A jornada com API, PostgreSQL e worker Redis/BullMQ reais usa `pnpm test:notifications`, documentado em [integração](../integration/README.md).

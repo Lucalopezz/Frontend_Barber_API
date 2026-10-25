@@ -6,6 +6,7 @@ import {
   Search,
   Store,
   Clock3,
+  Bell,
 } from "lucide-react";
 import type { User } from "@/types/user.type";
 import { Button } from "@/components/ui/button";
@@ -75,6 +76,13 @@ export const Navbar = ({ isAuthenticated, user, onLogout }: NavbarProps) => {
             </nav>
           )}
           <div className="flex items-center gap-2">
+            {isAuthenticated && (
+              <Button asChild variant="ghost" size="icon" className="size-11">
+                <Link to="/notifications" aria-label="Notificações">
+                  <Bell size={20} aria-hidden="true" />
+                </Link>
+              </Button>
+            )}
             {!isAuthenticated ? (
               <>
                 <Button asChild variant="ghost">

@@ -32,6 +32,18 @@ O runner inicia e encerra seus servidores nas portas 3002 e 5175, que precisam e
 
 Cenários: dono cria loja/serviço sem refazer login, configura expediente e folga; cliente pesquisa catálogo e agenda; conflito concorrente devolve 409 e atualiza horários; isolamento entre clientes; cancelamento; dono remarca e conclui. Navegador em UTC e loja em São Paulo verificam a conversão do horário. Traces de falhas ficam ignorados pelo Git e podem conter dados de sessão.
 
+## Notificações com worker real
+
+`pnpm test:notifications` executa uma jornada dedicada com API, PostgreSQL, Redis e o worker compilado. Exige a parte 1 do backend, suas dependências instaladas, migrations de teste aplicadas e `pnpm build` concluído, além do Redis local saudável na porta configurada no `.env.test` da API. O Compose do backend inclui esse serviço.
+
+```bash
+BARBER_API_DIR=/caminho/absoluto/Projeto_Barber_API pnpm test:notifications
+```
+
+A configuração inicia e encerra API (3002), Vite (5175) e worker separados. O worker usa Redis DB 1 e prefixo exclusivo por execução, sem alterar as filas de desenvolvimento. O cenário cria a reserva pela interface, aguarda a entrega, confere a confirmação nas telas do cliente e profissional e verifica uma caixa vazia para outro cliente. O navegador usa UTC e a confirmação mostra 09:00 no fuso de São Paulo.
+
+Essa jornada fica fora de `pnpm test:integration`, que continua sem exigir Redis. Execute as jornadas e suítes de banco sequencialmente; a limpeza remove somente as fixtures dessa execução no schema `barber_api_test`.
+
 ## Histórico — assistente simulado removido
 
 O antigo `assistant.real.spec.ts` cobria consultas de catálogo, serviços e disponibilidade sem escrita. Foi removido junto da funcionalidade. A jornada real de agendamento em `booking.real.spec.ts` permanece ativa, com os mesmos requisitos de banco e execução sequencial descritos acima.

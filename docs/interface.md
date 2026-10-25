@@ -21,7 +21,9 @@ Celular: [marca                              conta]
 
 ## Conteúdo
 
-Uma ação principal por seção. Rótulos em português; estados de agendamento traduzidos. Políticas aparecem onde ajudam a decidir, com detalhes expansíveis. A reserva agora seleciona um profissional da equipe; não prometer favoritos, avaliações ou notificações que o produto não implementa.
+Uma ação principal por seção. Rótulos em português; estados de agendamento traduzidos. Políticas aparecem onde ajudam a decidir, com detalhes expansíveis. A reserva agora seleciona um profissional da equipe; não prometer favoritos ou avaliações que o produto não implementa.
+
+A caixa de notificações fica em `/notifications`, com acesso pelo sino no cabeçalho em desktop e celular. Nesta primeira entrega, mostra confirmações de reserva do cliente ou profissional autenticado, paginação e atualização manual. O horário exibido usa o fuso da barbearia. A leitura, o contador de não lidas, os lembretes e a atualização periódica pertencem às próximas etapas do plano.
 
 Gestão da barbearia usa destinos separados para dados, serviços e equipe. Expediente e folgas ficam em uma página própria do profissional, com duas abas. A navegação principal muda conforme o papel da conta; no celular há no máximo quatro destinos fixos. A conta deixa de duplicar a lista de agendamentos.
 
