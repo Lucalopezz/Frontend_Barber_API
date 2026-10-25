@@ -6,7 +6,6 @@ import {
   Search,
   Store,
   Clock3,
-  Bell,
 } from "lucide-react";
 import type { User } from "@/types/user.type";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Link, NavLink } from "react-router-dom";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 interface NavbarProps {
   isAuthenticated: boolean;
@@ -76,13 +76,7 @@ export const Navbar = ({ isAuthenticated, user, onLogout }: NavbarProps) => {
             </nav>
           )}
           <div className="flex items-center gap-2">
-            {isAuthenticated && (
-              <Button asChild variant="ghost" size="icon" className="size-11">
-                <Link to="/notifications" aria-label="Notificações">
-                  <Bell size={20} aria-hidden="true" />
-                </Link>
-              </Button>
-            )}
+            {isAuthenticated && <NotificationBell />}
             {!isAuthenticated ? (
               <>
                 <Button asChild variant="ghost">

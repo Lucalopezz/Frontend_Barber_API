@@ -1,21 +1,32 @@
 import { useState } from "react";
-import { Bell, CalendarDays, RefreshCw } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Bell, RefreshCw } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useListNotifications } from "@/hooks/queries/notifications/useListNotifications";
+import { useMarkNotificationRead } from "@/hooks/queries/notifications/useMarkNotificationRead";
+import { NotificationItem } from "@/components/notifications/NotificationItem";
+import { notificationKeys } from "@/hooks/queries/notifications/queryKeys";
+import { getSessionSnapshot } from "@/auth/session";
 
 export function Notifications() {
   const [page, setPage] = useState(1);
   const query = useListNotifications(page);
+  const markRead = useMarkNotificationRead();
+  const queryClient = useQueryClient();
+  const refresh = () => {
+    const identity = getSessionSnapshot();
+    void query.refetch();
+    if (identity) void queryClient.invalidateQueries({ queryKey: notificationKeys.unread(identity.sessionId) });
+  };
   const { data, isPending, isFetching, isError } = query;
   return (
     <section className="page-section mx-auto max-w-3xl space-y-6" aria-labelledby="notifications-heading" aria-busy={isFetching}>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 id="notifications-heading" className="page-title">Notificações</h1>
-          <p className="mt-2 text-muted-foreground">As confirmações dos seus agendamentos ficam aqui.</p>
+          <p className="mt-2 text-muted-foreground">Acompanhe confirmações, alterações e cancelamentos dos seus agendamentos.</p>
         </div>
-        <Button variant="outline" disabled={isFetching} onClick={() => void query.refetch()}>
+        <Button variant="outline" disabled={isFetching} onClick={refresh}>
           <RefreshCw size={16} aria-hidden="true" /> Atualizar
         </Button>
       </div>
@@ -23,35 +34,24 @@ export function Notifications() {
       {isError && (
         <div role="alert" className="rounded-lg border border-destructive/30 bg-white p-5 space-y-3">
           <p>{data ? "Não foi possível atualizar as notificações. Mostrando a última consulta." : "Não foi possível carregar suas notificações."}</p>
-          <Button variant="outline" disabled={isFetching} onClick={() => void query.refetch()}>Tentar novamente</Button>
+          <Button variant="outline" disabled={isFetching} onClick={refresh}>Tentar novamente</Button>
         </div>
       )}
       {data?.data.length === 0 && !isError && (
         <div className="rounded-xl border bg-white px-6 py-12 text-center">
           <Bell className="mx-auto mb-4 text-muted-foreground" size={28} aria-hidden="true" />
           <h2 className="text-2xl font-semibold">Nenhuma notificação por enquanto</h2>
-          <p className="mt-2 text-muted-foreground">Quando um agendamento for confirmado, o aviso aparecerá aqui.</p>
+          <p className="mt-2 text-muted-foreground">Quando houver uma confirmação ou mudança nos seus agendamentos, o aviso aparecerá aqui.</p>
         </div>
       )}
       {data && data.data.length > 0 && (
-        <ul aria-label="Confirmações de agendamento" className="divide-y rounded-xl border bg-white">
+        <ul aria-label="Notificações de agendamento" className="divide-y rounded-xl border bg-white">
           {data.data.map((notification) => (
-            <li key={notification.id} className="p-5 sm:p-6 space-y-2 break-words">
-              <div className="flex items-center gap-2 text-primary">
-                <CalendarDays size={18} aria-hidden="true" />
-                <h2 className="text-xl font-semibold">Agendamento confirmado</h2>
-              </div>
-              <p className="font-medium">{notification.serviceName} em {notification.barberShopName}</p>
-              <p>
-                <time dateTime={notification.startsAt}>
-                  {new Intl.DateTimeFormat("pt-BR", { timeZone: notification.timezone, dateStyle: "short", timeStyle: "short" }).format(new Date(notification.startsAt))}
-                </time>
-                <span className="block text-sm text-muted-foreground">Horário da barbearia</span>
-              </p>
-              <Button asChild variant="link" className="h-auto px-0 py-2">
-                <Link to="/appointments">Ver na agenda</Link>
-              </Button>
-            </li>
+            <NotificationItem key={notification.id} notification={notification}
+              marking={markRead.isPending && markRead.variables === notification.id}
+              disabled={markRead.isPending}
+              error={markRead.isError && markRead.variables === notification.id}
+              onMarkRead={() => markRead.mutate(notification.id)} />
           ))}
         </ul>
       )}

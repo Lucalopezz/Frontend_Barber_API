@@ -1,15 +1,18 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { mockSession, sessionTokens } from "./session-fixture";
+import type { Notification } from "../../src/types/notification.type";
 
 test.use({ timezoneId: "UTC" });
 
-const notice = {
+const notice: Notification = {
   id: "notice-1",
   appointmentId: "appointment-1",
   type: "appointment_created",
   serviceName: "Corte",
   barberShopName: "Barbearia Escola",
   startsAt: "2030-01-07T12:00:00.000Z",
+  previousStartsAt: null,
+  previousServiceName: null,
   timezone: "America/Sao_Paulo",
   createdAt: "2030-01-01T12:00:00.000Z",
   readAt: null,
@@ -25,12 +28,14 @@ function barrier() {
   return { promise, release };
 }
 
-async function mockNotifications(page: Page, respond: (route: Route) => Promise<unknown>) {
+async function mockNotifications(page: Page, respond: (route: Route) => Promise<unknown>, extra: { unread?: (route: Route) => Promise<unknown>; read?: (route: Route) => Promise<unknown> } = {}) {
   await mockSession(page, "notification-session");
   await page.route("**/api/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
     if (path.includes("/auth/")) return route.fallback();
     if (path.endsWith("/users/me")) return route.fulfill({ json: { data: { id: "client-1", name: "Cliente", role: "client" } } });
+    if (path.endsWith("/notifications/unread-count")) return extra.unread ? extra.unread(route) : route.fulfill({ json: { data: { count: 1 } } });
+    if (path.endsWith("/read")) return extra.read ? extra.read(route) : route.fulfill({ json: { data: { ...notice, readAt: "2030-01-02T12:00:00.000Z" } } });
     if (path.endsWith("/notifications")) return respond(route);
     return route.fulfill({ json: collection([]) });
   });
@@ -114,7 +119,7 @@ test("acesso anônimo não consulta notificações e redireciona para entrar", a
   let requests = 0;
   await page.route("**/api/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
-    if (path.endsWith("/notifications")) requests++;
+    if (path.includes("/notifications")) requests++;
     return route.fulfill({ status: 401, json: { code: "AUTH_SESSION_INVALID" } });
   });
   await page.goto("/notifications");
@@ -137,6 +142,7 @@ test("não reutiliza confirmação nem resposta atrasada da conta anterior", asy
     if (path.endsWith("/users/login")) current = "b";
     if (path.endsWith("/auth/refresh") || path.endsWith("/users/login")) return route.fulfill({ json: sessionTokens(`account-${current}`, current === "a" ? sidA : sidB) });
     if (path.endsWith("/users/me")) return route.fulfill({ json: { data: { id: current, name: current, role: "client" } } });
+    if (path.endsWith("/notifications/unread-count")) return route.fulfill({ json: { data: { count: 1 } } });
     if (path.endsWith("/notifications")) {
       const identity = route.request().headers().authorization === "Bearer account-a" ? "a" : "b";
       if (identity === "a" && ++requestsA === 2) { reached.release(); await resume.promise; }
@@ -175,4 +181,159 @@ test("abre pelo sino no celular e comporta nomes longos sem rolagem horizontal",
   await expect(page.getByRole("heading", { name: "Notificações", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Agendamento confirmado" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test("mostra alterações com dados anteriores e novos e mantém confirmações e cancelamentos no histórico", async ({ page }) => {
+  await mockNotifications(page, (route) => route.fulfill({ json: collection([
+    { ...notice, id: "changed", type: "appointment_updated", serviceName: "Barba", previousServiceName: "Corte", previousStartsAt: "2030-01-07T12:00:00.000Z", startsAt: "2030-01-08T15:00:00.000Z" },
+    { ...notice, id: "cancelled", type: "appointment_cancelled" },
+    notice,
+  ]) }));
+  await page.goto("/notifications");
+  const changed = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: "Agendamento alterado" }) });
+  await expect(changed.getByText("Serviço anterior", { exact: true })).toBeVisible();
+  await expect(changed.getByText("Corte", { exact: true })).toBeVisible();
+  await expect(changed.getByText("Novo serviço", { exact: true })).toBeVisible();
+  await expect(changed.getByText("Barba", { exact: true })).toBeVisible();
+  await expect(changed.locator("time")).toHaveText(["07/01/2030, 09:00", "08/01/2030, 12:00"]);
+  await expect(page.getByRole("heading", { name: "Agendamento cancelado", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Agendamento confirmado", exact: true })).toBeVisible();
+});
+
+test("confirma leitura no servidor antes de alterar a lista e a contagem do sino", async ({ page }) => {
+  const pending = barrier();
+  const reached = barrier();
+  let readAt: string | null = null;
+  await mockNotifications(page, (route) => route.fulfill({ json: collection([{ ...notice, readAt }]) }), {
+    unread: (route) => route.fulfill({ json: { data: { count: readAt ? 0 : 1 } } }),
+    read: async (route) => {
+      expect(route.request().method()).toBe("PATCH");
+      reached.release();
+      await pending.promise;
+      readAt = "2030-01-02T12:00:00.000Z";
+      return route.fulfill({ json: { data: { ...notice, readAt } } });
+    },
+  });
+  await page.goto("/notifications");
+  const bell = page.getByRole("link", { name: "Notificações", exact: true });
+  await expect(bell).toHaveAccessibleDescription("1 notificação não lida.");
+  await page.getByRole("button", { name: "Marcar como lida", exact: true }).click();
+  await reached.promise;
+  await expect(page.getByRole("button", { name: "Salvando…", exact: true })).toBeDisabled();
+  await expect(page.getByText("Não lida", { exact: true })).toBeVisible();
+  await expect(bell).toHaveAccessibleDescription("1 notificação não lida.");
+  pending.release();
+  await expect(page.getByText("Lida", { exact: true })).toBeVisible();
+  await expect(bell).toHaveAccessibleDescription("0 notificações não lidas.");
+  await expect(page.getByRole("button", { name: "Marcar como lida", exact: true })).toHaveCount(0);
+});
+
+test("falha de leitura preserva o aviso não lido e permite tentar novamente sem falso sucesso", async ({ page }) => {
+  let succeed = false;
+  let readAt: string | null = null;
+  let attempts = 0;
+  await mockNotifications(page, (route) => route.fulfill({ json: collection([{ ...notice, readAt }]) }), {
+    unread: (route) => route.fulfill({ json: { data: { count: readAt ? 0 : 1 } } }),
+    read: (route) => {
+      attempts++;
+      if (!succeed) return route.fulfill({ status: 500, json: { message: "Falha temporária" } });
+      readAt = "2030-01-02T12:00:00.000Z";
+      return route.fulfill({ json: { data: { ...notice, readAt } } });
+    },
+  });
+  await page.goto("/notifications");
+  await page.getByRole("button", { name: "Marcar como lida", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("Não foi possível marcar a notificação como lida.");
+  await expect(page.getByText("Não lida", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Notificações", exact: true })).toHaveAccessibleDescription("1 notificação não lida.");
+  expect(attempts).toBe(1);
+  succeed = true;
+  await page.getByRole("button", { name: "Marcar como lida", exact: true }).click();
+  await expect(page.getByText("Lida", { exact: true })).toBeVisible();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  expect(attempts).toBe(2);
+});
+
+test("atualiza lista e contagem a cada trinta segundos somente em primeiro plano", async ({ page }) => {
+  await page.clock.install({ time: new Date("2030-01-01T12:00:00Z") });
+  let lists = 0;
+  let counts = 0;
+  await mockNotifications(page, (route) => route.fulfill({ json: collection([{ ...notice, serviceName: `Corte ${++lists}` }]) }), {
+    unread: (route) => route.fulfill({ json: { data: { count: ++counts } } }),
+  });
+  await page.goto("/notifications");
+  await expect(page.getByText("Corte 1 em Barbearia Escola", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Notificações", exact: true })).toHaveAccessibleDescription("1 notificação não lida.");
+  await page.clock.fastForward(20_000);
+  expect(lists).toBe(1);
+  expect(counts).toBe(1);
+  await page.clock.fastForward(10_000);
+  await expect(page.getByText("Corte 2 em Barbearia Escola", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Notificações", exact: true })).toHaveAccessibleDescription("2 notificações não lidas.");
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
+    window.dispatchEvent(new Event("visibilitychange"));
+  });
+  await page.clock.fastForward(60_000);
+  expect(lists).toBe(2);
+  expect(counts).toBe(2);
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "visible" });
+    window.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(page.getByText("Corte 3 em Barbearia Escola", { exact: true })).toBeVisible();
+});
+
+test("sino continua acessível quando a contagem falha e não inventa zero", async ({ page }) => {
+  await mockNotifications(page, (route) => route.fulfill({ json: collection() }), {
+    unread: (route) => route.fulfill({ status: 503, json: { message: "Indisponível" } }),
+  });
+  await page.goto("/notifications");
+  const bell = page.getByRole("link", { name: "Notificações", exact: true });
+  await expect(bell).toHaveAccessibleDescription("Contagem de notificações indisponível.");
+  await expect(bell).not.toContainText("0");
+  await expect(page.getByRole("heading", { name: "Agendamento confirmado", exact: true })).toBeVisible();
+});
+
+test("contagem grande limita o selo visual e mantém o total para leitor de tela", async ({ page }) => {
+  await mockNotifications(page, (route) => route.fulfill({ json: collection() }), {
+    unread: (route) => route.fulfill({ json: { data: { count: 204 } } }),
+  });
+  await page.goto("/notifications");
+  const bell = page.getByRole("link", { name: "Notificações", exact: true });
+  await expect(bell).toContainText("99+");
+  await expect(bell).toHaveAccessibleDescription("204 notificações não lidas.");
+});
+
+test("leitura atrasada da conta anterior não altera a lista nem a contagem da próxima conta", async ({ page }) => {
+  const reached = barrier();
+  const resume = barrier();
+  const settled = barrier();
+  let current: "a" | "b" = "a";
+  await page.route("**/api/v1/**", async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.endsWith("/auth/logout")) return route.fulfill({ status: 204 });
+    if (path.endsWith("/users/login")) current = "b";
+    if (path.endsWith("/auth/refresh") || path.endsWith("/users/login")) return route.fulfill({ json: sessionTokens(`account-${current}`, current === "a" ? "11111111-1111-4111-8111-111111111111" : "22222222-2222-4222-8222-222222222222") });
+    if (path.endsWith("/users/me")) return route.fulfill({ json: { data: { id: current, name: current, role: "client" } } });
+    if (path.endsWith("/notifications/unread-count")) return route.fulfill({ json: { data: { count: current === "a" ? 1 : 7 } } });
+    if (path.endsWith("/read")) {
+      reached.release(); await resume.promise;
+      await route.fulfill({ json: { data: { ...notice, serviceName: "Corte conta A", readAt: "2030-01-02T12:00:00.000Z" } } }).catch(() => { /* Identity change aborts this request. */ });
+      settled.release(); return;
+    }
+    if (path.endsWith("/notifications")) return route.fulfill({ json: collection([{ ...notice, serviceName: current === "a" ? "Corte conta A" : "Barba conta B" }]) });
+    return route.fulfill({ json: collection([]) });
+  });
+  await page.goto("/notifications");
+  await page.getByRole("button", { name: "Marcar como lida", exact: true }).click();
+  await reached.promise;
+  await page.evaluate(async () => { await (await import("/src/auth/session.ts")).loginSession({ email: "b@example.test", password: "Password2026!" }); });
+  await page.getByRole("link", { name: "Notificações", exact: true }).click();
+  await expect(page.getByText("Barba conta B em Barbearia Escola", { exact: true })).toBeVisible();
+  resume.release(); await settled.promise;
+  await expect(page.getByRole("link", { name: "Notificações", exact: true })).toHaveAccessibleDescription("7 notificações não lidas.");
+  await expect(page.getByText("Não lida", { exact: true })).toBeVisible();
+  await expect(page.getByText("Lida", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Corte conta A em Barbearia Escola", { exact: true })).toHaveCount(0);
 });

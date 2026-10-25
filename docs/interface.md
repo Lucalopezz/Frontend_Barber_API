@@ -23,7 +23,9 @@ Celular: [marca                              conta]
 
 Uma ação principal por seção. Rótulos em português; estados de agendamento traduzidos. Políticas aparecem onde ajudam a decidir, com detalhes expansíveis. A reserva agora seleciona um profissional da equipe; não prometer favoritos ou avaliações que o produto não implementa.
 
-A caixa de notificações fica em `/notifications`, com acesso pelo sino no cabeçalho em desktop e celular. Nesta primeira entrega, mostra confirmações de reserva do cliente ou profissional autenticado, paginação e atualização manual. O horário exibido usa o fuso da barbearia. A leitura, o contador de não lidas, os lembretes e a atualização periódica pertencem às próximas etapas do plano.
+A caixa de notificações fica em `/notifications`, com acesso pelo sino no cabeçalho em desktop e celular. Mostra confirmações, alterações e cancelamentos do cliente ou profissional autenticado, com paginação. Alterações mostram serviço e horário anteriores e novos quando houver mudança; os horários usam o fuso da barbearia. As confirmações anteriores permanecem no histórico.
+
+O sino informa a contagem de não lidas também para leitores de tela. A ação “Marcar como lida” só altera o aviso após a confirmação da API; falhas mantêm o estado anterior e oferecem nova tentativa. A lista e a contagem consultam a API a cada 30 segundos em primeiro plano, além da atualização manual. O cache é separado por sessão e respostas antigas não atualizam uma nova identidade. Lembretes pertencem à próxima parte do plano.
 
 Gestão da barbearia usa destinos separados para dados, serviços e equipe. Expediente e folgas ficam em uma página própria do profissional, com duas abas. A navegação principal muda conforme o papel da conta; no celular há no máximo quatro destinos fixos. A conta deixa de duplicar a lista de agendamentos.
 

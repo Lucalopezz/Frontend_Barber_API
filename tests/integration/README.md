@@ -34,13 +34,13 @@ Cenários: dono cria loja/serviço sem refazer login, configura expediente e fol
 
 ## Notificações com worker real
 
-`pnpm test:notifications` executa uma jornada dedicada com API, PostgreSQL, Redis e o worker compilado. Exige a parte 1 do backend, suas dependências instaladas, migrations de teste aplicadas e `pnpm build` concluído, além do Redis local saudável na porta configurada no `.env.test` da API. O Compose do backend inclui esse serviço.
+`pnpm test:notifications` executa uma jornada dedicada com API, PostgreSQL, Redis e o worker compilado. Exige as partes 1 e 2 do backend, suas dependências instaladas, migrations de teste aplicadas e `pnpm build` concluído, além do Redis local saudável na porta configurada no `.env.test` da API. O Compose do backend inclui esse serviço.
 
 ```bash
 BARBER_API_DIR=/caminho/absoluto/Projeto_Barber_API pnpm test:notifications
 ```
 
-A configuração inicia e encerra API (3002), Vite (5175) e worker separados. O worker usa Redis DB 1 e prefixo exclusivo por execução, sem alterar as filas de desenvolvimento. O cenário cria a reserva pela interface, aguarda a entrega, confere a confirmação nas telas do cliente e profissional e verifica uma caixa vazia para outro cliente. O navegador usa UTC e a confirmação mostra 09:00 no fuso de São Paulo.
+A configuração inicia e encerra API (3002), Vite (5175) e worker separados. O worker usa Redis DB 1 e prefixo exclusivo por execução, sem alterar as filas de desenvolvimento. O cenário cria a reserva pela interface e confere as confirmações nas telas do cliente e profissional; altera horário/serviço e confere o histórico anterior e novo; marca uma notificação como lida e verifica contagem, repetição idempotente e rejeição de outro destinatário; cancela pelo profissional e verifica que somente o cliente recebe o cancelamento. Outro cliente continua com a caixa vazia. O navegador usa UTC e a interface mostra 09:00/10:00 no fuso de São Paulo.
 
 Essa jornada fica fora de `pnpm test:integration`, que continua sem exigir Redis. Execute as jornadas e suítes de banco sequencialmente; a limpeza remove somente as fixtures dessa execução no schema `barber_api_test`.
 

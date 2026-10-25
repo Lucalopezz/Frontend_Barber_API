@@ -45,7 +45,7 @@ test.afterAll(async () => {
   } finally { await database.$disconnect(); }
 });
 
-test("reserva confirmada chega às caixas do cliente e profissional pelo worker real", async ({ browser, request }) => {
+test("confirmação, alteração, cancelamento e leitura atravessam API, worker e caixas corretas", async ({ browser, request }) => {
   for (const [account, role] of [[owner, "barber"], [client, "client"], [outsider, "client"]] as const) {
     const response = await request.post(`${api}/users`, { data: { ...account, password, role } });
     expect(response.status()).toBe(201);
@@ -85,7 +85,9 @@ test("reserva confirmada chega às caixas do cliente e profissional pelo worker 
     await customerPage.getByRole("button", { name: "09:00", exact: true }).click();
     const booked = customerPage.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/v1/appointments");
     await customerPage.getByRole("button", { name: "Confirmar agendamento", exact: true }).click();
-    expect((await booked).status()).toBe(201);
+    const bookingResponse = await booked;
+    expect(bookingResponse.status()).toBe(201);
+    const appointmentId = (await bookingResponse.json()).data.id;
 
     const clientToken = await customerPage.evaluate(async () => (await import("/src/auth/session.ts")).getAccessToken());
     await expect.poll(async () => {
@@ -103,6 +105,52 @@ test("reserva confirmada chega às caixas do cliente e profissional pelo worker 
     await login(professionalPage, owner);
     await professionalPage.getByRole("link", { name: "Notificações", exact: true }).click();
     await expect(professionalPage.getByText(`${serviceName} em ${shopName}`, { exact: true })).toBeVisible();
+
+    const changedServiceName = `Barba confirmação ${fixture}`;
+    const changedService = await request.post(`${api}/services`, {
+      headers: { authorization }, data: { name: changedServiceName, description: "Alteração por fila", price: 40, duration: 30 },
+    });
+    expect(changedService.status()).toBe(201);
+    const newDate = new Date(target.getTime() + 3_600_000).toISOString();
+    const rescheduled = await request.put(`${api}/appointments/${appointmentId}`, {
+      headers: { authorization }, data: { date: newDate, serviceId: (await changedService.json()).data.id },
+    });
+    expect(rescheduled.status()).toBe(200);
+    await expect.poll(async () => {
+      const response = await request.get(`${api}/notifications`, { headers: { authorization: `Bearer ${clientToken}` } });
+      return (await response.json()).data.filter((item: { type: string }) => item.type === "appointment_updated").length;
+    }, { timeout: 20_000 }).toBe(1);
+    await customerPage.getByRole("link", { name: "Notificações", exact: true }).click();
+    const changed = customerPage.getByRole("listitem").filter({ has: customerPage.getByRole("heading", { name: "Agendamento alterado", exact: true }) });
+    await expect(changed.getByText(serviceName, { exact: true })).toBeVisible();
+    await expect(changed.getByText(changedServiceName, { exact: true })).toBeVisible();
+    await expect(changed.locator("time").first()).toContainText("09:00");
+    await expect(changed.locator("time").last()).toContainText("10:00");
+    const marked = customerPage.waitForResponse((response) => response.request().method() === "PATCH" && new URL(response.url()).pathname.endsWith("/read"));
+    await changed.getByRole("button", { name: "Marcar como lida", exact: true }).click();
+    const markedResponse = await marked;
+    expect(markedResponse.status()).toBe(200);
+    const readNotification = (await markedResponse.json()).data;
+    await expect(changed.getByText("Lida", { exact: true })).toBeVisible();
+    await expect(customerPage.getByRole("link", { name: "Notificações", exact: true })).toHaveAccessibleDescription("1 notificação não lida.");
+    const repeatedRead = await request.patch(`${api}/notifications/${readNotification.id}/read`, { headers: { authorization: `Bearer ${clientToken}` } });
+    expect(repeatedRead.status()).toBe(200);
+    expect((await repeatedRead.json()).data.readAt).toBe(readNotification.readAt);
+    const otherReader = await request.patch(`${api}/notifications/${readNotification.id}/read`, { headers: { authorization } });
+    expect(otherReader.status()).toBe(404);
+
+    const cancellation = await request.patch(`${api}/appointments/${appointmentId}`, { headers: { authorization }, data: { newStatus: "cancelled" } });
+    expect(cancellation.status()).toBe(200);
+    await expect.poll(async () => {
+      const response = await request.get(`${api}/notifications`, { headers: { authorization: `Bearer ${clientToken}` } });
+      return (await response.json()).data.filter((item: { type: string }) => item.type === "appointment_cancelled").length;
+    }, { timeout: 20_000 }).toBe(1);
+    await customerPage.getByRole("button", { name: "Atualizar", exact: true }).click();
+    await expect(customerPage.getByRole("heading", { name: "Agendamento cancelado", exact: true })).toBeVisible();
+    await expect(customerPage.getByRole("heading", { name: "Agendamento confirmado", exact: true })).toBeVisible();
+    await professionalPage.getByRole("button", { name: "Atualizar", exact: true }).click();
+    await expect(professionalPage.getByRole("heading", { name: "Agendamento alterado", exact: true })).toBeVisible();
+    await expect(professionalPage.getByRole("heading", { name: "Agendamento cancelado", exact: true })).toHaveCount(0);
     const outsiderLogin = await request.post(`${api}/users/login`, { data: { email: outsider.email, password } });
     expect(outsiderLogin.status()).toBe(201);
     const outsiderNotifications = await request.get(`${api}/notifications`, { headers: { authorization: `Bearer ${(await outsiderLogin.json()).accessToken}` } });
