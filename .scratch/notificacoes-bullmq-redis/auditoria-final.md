@@ -32,6 +32,15 @@ extensões futuras e não fazem parte desta entrega.
    mantém o workflow reutilizável compatível com um checkout frontend antigo;
    o runner desta branch sempre é executado.
 
+4. A execução pareada remota expôs uma corrida de preparação no cenário de
+   cookie/logout tardio: a sessão A revogada ainda podia ser restaurada por B;
+   uma consulta recebia 401 e invalidava a geração antes do POST de login B.
+   O teste agora força um refresh real da sessão A e exige estado anonymous
+   antes de iniciar B, mantendo a resposta de logout A retida e todos os
+   asserts de cookie, reload e autorização. Nenhum timeout ou retry foi
+   acrescentado, nem houve alteração na aplicação. O alvo passou 5/5 em
+   repetições diagnósticas e a suíte geral real passou 7/7.
+
 ## Execução local de fechamento
 
 | Verificação | Resultado |
@@ -41,6 +50,7 @@ extensões futuras e não fazem parte desta entrega.
 | pnpm test:notifications:unit | 4 aprovados |
 | pnpm test:e2e --workers=2 | 100 aprovados, sem skips/retries |
 | pnpm test:notifications | 2 jornadas reais aprovadas |
+| pnpm test:integration | 7 jornadas gerais reais aprovadas |
 | git diff --check | Aprovado |
 
 A jornada real de lembrete aguardou o cron UTC efetivo e verificou um evento
