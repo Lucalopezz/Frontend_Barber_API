@@ -86,6 +86,28 @@ async function noOverflow(page: Page) {
     ),
   ).toBe(true);
 }
+
+test("cabeçalho do dono mantém sino e navegação acessíveis em 768px sem rolagem horizontal", async ({ page }) => {
+  await page.setViewportSize({ width: 768, height: 900 });
+  await setup(page, "owner");
+  await page.route("**/notifications/unread-count", (route) =>
+    route.fulfill({ json: { data: { count: 23 } } }),
+  );
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Seu salão, em dia.", exact: true })).toBeVisible();
+  const bell = page.getByRole("link", { name: "Notificações", exact: true });
+  await expect(bell).toHaveAccessibleDescription("23 notificações não lidas.");
+  await expect(page.getByRole("link", { name: "Agenda", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Abrir menu da conta", exact: true })).toBeVisible();
+  await noOverflow(page);
+  const bounds = await bell.boundingBox();
+  expect(bounds).not.toBeNull();
+  expect(bounds!.x).toBeGreaterThanOrEqual(0);
+  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(768);
+  await bell.click();
+  await expect(page).toHaveURL(/\/notifications$/);
+});
+
 for (const width of [360, 768, 1440]) {
   test(`principais telas responsivas a ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });

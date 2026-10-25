@@ -91,7 +91,7 @@ export const Navbar = ({ isAuthenticated, user, onLogout }: NavbarProps) => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" aria-label="Abrir menu da conta">
                     <UserRound size={17} aria-hidden="true" />
-                    <span className="hidden sm:inline">Minha conta</span>
+                    <span className="hidden lg:inline">Minha conta</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-60">
