@@ -5,7 +5,10 @@ import integration from "./playwright.integration.config";
 
 // Keep the existing integration journey independent of Redis. This runner adds
 // the actual worker only for the notification journey, using an isolated queue.
-export default defineConfig(integration, {
+export default defineConfig({
+  // defineConfig(base, overrides) concatenates webServer arrays. Spread the
+  // base once so API and Vite start only once alongside the additional worker.
+  ...integration,
   testMatch: "**/notifications.real.spec.ts",
   testIgnore: [],
   webServer: [

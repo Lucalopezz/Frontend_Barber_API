@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseEnv } from "node:util";
+import type { Notification } from "../../src/types/notification.type";
 
 const api = "http://127.0.0.1:3002/api/v1";
 const apiDirectory = resolve(process.env.BARBER_API_DIR ?? "../Projeto_Barber_API");
@@ -16,6 +17,29 @@ const outsider = { name: "Outro cliente", email: `other-notification-${fixture}@
 const shopName = `Barbearia confirmação ${fixture}`;
 const serviceName = `Corte confirmação ${fixture}`;
 
+type DatabaseModel = { deleteMany(input: { where: Record<string, unknown> }): Promise<unknown> };
+type ReminderOutbox = { id: string; recipientIds: string[]; processedAt: Date | null; startsAt: Date };
+type TestDatabase = {
+  appointment: DatabaseModel & { update(input: Record<string, unknown>): Promise<unknown> };
+  notificationOutbox: { findMany(input: Record<string, unknown>): Promise<ReminderOutbox[]> };
+  barberSchedule: DatabaseModel;
+  barberTimeOff: DatabaseModel;
+  service: DatabaseModel;
+  barberShop: DatabaseModel;
+  user: DatabaseModel;
+  $disconnect(): Promise<void>;
+};
+
+function createTestDatabase(): TestDatabase {
+  const environment = parseEnv(readFileSync(resolve(apiDirectory, ".env.test"), "utf8"));
+  if (environment.NODE_ENV !== "test" || new URL(environment.DATABASE_URL).searchParams.get("schema") !== "barber_api_test") {
+    throw new Error("Fixtures de notificações recusadas fora de barber_api_test.");
+  }
+  const require = createRequire(resolve(apiDirectory, "package.json"));
+  const { PrismaClient } = require("@prisma/client") as { PrismaClient: new (options: { datasourceUrl: string }) => TestDatabase };
+  return new PrismaClient({ datasourceUrl: environment.DATABASE_URL });
+}
+
 async function login(page: Page, account: { email: string }) {
   await page.goto("/login");
   await page.getByPlaceholder("seu@exemplo.com").fill(account.email);
@@ -25,15 +49,7 @@ async function login(page: Page, account: { email: string }) {
 }
 
 test.afterAll(async () => {
-  const environment = parseEnv(readFileSync(resolve(apiDirectory, ".env.test"), "utf8"));
-  if (environment.NODE_ENV !== "test" || new URL(environment.DATABASE_URL).searchParams.get("schema") !== "barber_api_test") {
-    throw new Error("Cleanup de notificações recusado fora de barber_api_test.");
-  }
-  type Model = { deleteMany(input: { where: Record<string, unknown> }): Promise<unknown> };
-  type Database = { appointment: Model; barberSchedule: Model; barberTimeOff: Model; service: Model; barberShop: Model; user: Model; $disconnect(): Promise<void> };
-  const require = createRequire(resolve(apiDirectory, "package.json"));
-  const { PrismaClient } = require("@prisma/client") as { PrismaClient: new (options: { datasourceUrl: string }) => Database };
-  const database = new PrismaClient({ datasourceUrl: environment.DATABASE_URL });
+  const database = createTestDatabase();
   try {
     // Notifications and outbox entries belong to these appointments and cascade.
     await database.appointment.deleteMany({ where: { OR: [{ clientId: { in: users } }, { barberId: { in: users } }] } });
@@ -43,6 +59,100 @@ test.afterAll(async () => {
     await database.barberShop.deleteMany({ where: { ownerId: { in: users } } });
     await database.user.deleteMany({ where: { id: { in: users } } });
   } finally { await database.$disconnect(); }
+});
+
+test("cron cria e entrega lembrete ao cliente desconectado, que o encontra ao abrir a aplicação", async ({ browser, request }) => {
+  test.setTimeout(180_000);
+  const reminderFixture = randomUUID();
+  const professional = { name: "Profissional do lembrete", email: `barber-reminder-${reminderFixture}@example.test` };
+  const customer = { name: "Cliente do lembrete", email: `client-reminder-${reminderFixture}@example.test` };
+  const accountIds: Record<string, string> = {};
+  for (const [account, role] of [[professional, "barber"], [customer, "client"]] as const) {
+    const response = await request.post(`${api}/users`, { data: { ...account, password, role } });
+    expect(response.status()).toBe(201);
+    const id = (await response.json()).data.id;
+    users.push(id);
+    accountIds[role] = id;
+  }
+
+  const professionalLogin = await request.post(`${api}/users/login`, { data: { email: professional.email, password } });
+  expect(professionalLogin.status()).toBe(201);
+  const professionalAuthorization = `Bearer ${(await professionalLogin.json()).accessToken}`;
+  const customerLogin = await request.post(`${api}/users/login`, { data: { email: customer.email, password } });
+  expect(customerLogin.status()).toBe(201);
+  const customerAuthorization = `Bearer ${(await customerLogin.json()).accessToken}`;
+  const reminderShopName = `Barbearia lembrete ${reminderFixture}`;
+  const reminderServiceName = `Corte lembrete ${reminderFixture}`;
+  const shopResponse = await request.post(`${api}/barber-shops`, {
+    headers: { authorization: professionalAuthorization },
+    data: { name: reminderShopName, address: "Rua das Flores, 123, São Paulo - SP", timezone: "America/Sao_Paulo" },
+  });
+  expect(shopResponse.status()).toBe(201);
+  const target = new Date();
+  target.setUTCDate(target.getUTCDate() + 7);
+  target.setUTCHours(12, 0, 0, 0);
+  const schedule = await request.put(`${api}/appointments/availability/me/schedule`, {
+    headers: { authorization: professionalAuthorization },
+    data: { schedules: [{ dayOfWeek: target.getUTCDay(), startMinute: 540, endMinute: 1020 }] },
+  });
+  expect(schedule.status()).toBe(200);
+  const serviceResponse = await request.post(`${api}/services`, {
+    headers: { authorization: professionalAuthorization },
+    data: { name: reminderServiceName, description: "Lembrete pelo cron real", price: 60, duration: 30 },
+  });
+  expect(serviceResponse.status()).toBe(201);
+  const bookingResponse = await request.post(`${api}/appointments`, {
+    headers: { authorization: customerAuthorization },
+    data: { serviceId: (await serviceResponse.json()).data.id, barberId: accountIds.barber, date: target.toISOString() },
+  });
+  expect(bookingResponse.status()).toBe(201);
+  const appointmentId = (await bookingResponse.json()).data.id;
+
+  const database = createTestDatabase();
+  const startsAt = new Date(Date.now() + 2 * 60 * 60_000);
+  startsAt.setUTCSeconds(0, 0);
+  try {
+    const reminderWhere = { appointmentId, type: "appointment_reminder" };
+    const reminderSelect = { id: true, recipientIds: true, processedAt: true, startsAt: true };
+    expect(await database.notificationOutbox.findMany({ where: reminderWhere, select: reminderSelect })).toEqual([]);
+    // Only this test's reservation is aged into the due window. The production
+    // cron, publisher and worker must create and deliver the reminder themselves.
+    await database.appointment.update({
+      where: { id: appointmentId },
+      data: { date: startsAt, endDate: new Date(startsAt.getTime() + 30 * 60_000), createdAt: new Date(Date.now() - 2 * 24 * 60 * 60_000) },
+    });
+
+    // No customer browser exists yet: reminder creation does not depend on an
+    // open page or its 30-second polling timer. Allow one minute plus publication.
+    await expect.poll(async () => {
+      const response = await request.get(`${api}/notifications`, { headers: { authorization: customerAuthorization } });
+      expect(response.status()).toBe(200);
+      const notifications = (await response.json()).data as Notification[];
+      return notifications.filter((item) => item.appointmentId === appointmentId && item.type === "appointment_reminder").length;
+    }, { timeout: 75_000, intervals: [500, 1_000, 2_000] }).toBe(1);
+    const events = await database.notificationOutbox.findMany({ where: reminderWhere, select: reminderSelect });
+    expect(events).toHaveLength(1);
+    expect(events[0].recipientIds).toEqual([accountIds.client]);
+    expect(events[0].processedAt).not.toBeNull();
+    expect(events[0].startsAt).toEqual(startsAt);
+    const professionalNotifications = await request.get(`${api}/notifications`, { headers: { authorization: professionalAuthorization } });
+    expect(professionalNotifications.status()).toBe(200);
+    expect(((await professionalNotifications.json()).data as Notification[]).filter((item) => item.appointmentId === appointmentId && item.type === "appointment_reminder")).toEqual([]);
+  } finally { await database.$disconnect(); }
+
+  const customerContext = await browser.newContext({ timezoneId: "UTC" });
+  try {
+    const page = await customerContext.newPage();
+    await login(page, customer);
+    await page.getByRole("link", { name: "Notificações", exact: true }).click();
+    const reminder = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: "Lembrete de agendamento", exact: true }) });
+    await expect(reminder).toHaveCount(1);
+    await expect(reminder.getByText(`${reminderServiceName} em ${reminderShopName}`, { exact: true })).toBeVisible();
+    await expect(reminder.locator("time")).toHaveAttribute("datetime", startsAt.toISOString());
+    await expect(reminder.locator("time")).toHaveText(new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(startsAt));
+    await expect(reminder.getByText("Não lida", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Agendamento confirmado", exact: true })).toBeVisible();
+  } finally { await customerContext.close(); }
 });
 
 test("confirmação, alteração, cancelamento e leitura atravessam API, worker e caixas corretas", async ({ browser, request }) => {

@@ -32,6 +32,15 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     services:
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
       postgres:
         image: postgres:15
         env:
@@ -302,6 +311,16 @@ jobs:
         env:
           BARBER_API_DIR: ${{ github.workspace }}/backend
         run: pnpm test:integration
+
+      # A previous frontend main can still be selected by a backend workflow.
+      # Run the additional journey when that exact checkout provides its runner.
+      - name: Jornada real de notificações com Redis e worker
+        id: notifications
+        if: ${{ hashFiles('frontend/playwright.notifications.config.ts') != '' }}
+        working-directory: frontend
+        env:
+          BARBER_API_DIR: ${{ github.workspace }}/backend
+        run: pnpm test:notifications --output=test-results/notifications
 
       - name: Reunir evidências disponíveis
         if: ${{ always() }}
