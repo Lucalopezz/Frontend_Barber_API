@@ -12,6 +12,7 @@ export function useMarkNotificationRead() {
   const sessionId = getSessionSnapshot()?.sessionId;
   useEffect(() => {
     const active = controllers.current;
+    // Abort on identity changes; the success guard also covers a response that wins this race.
     const abort = () => { active.forEach((controller) => controller.abort()); active.clear(); };
     const unsubscribe = onIdentityChange(abort);
     return () => { unsubscribe(); abort(); };

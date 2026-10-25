@@ -7,6 +7,7 @@
 - Rotas da interface podem usar `/barber-shop/:id`; endpoints HTTP usam `/barber-shops` e `/users/me`.
 - A aplicação é incompleta. Não implemente features ou refactors fora da tarefa; descreva limitações e os testes realmente executados.
 - Ao trabalhar em paralelo, use uma branch/worktree por tarefa. `node_modules`, `.env.local`, portas e processos devem ser configurados em cada worktree; não edite a worktree de outro agente.
+- Escreva comentários para explicar decisões, regras, invariantes e limites que não sejam óbvios pela leitura do código, sobretudo o motivo de uma proteção contra corrida ou isolamento. Evite comentários que apenas narram a linha seguinte; mantenha cada comentário junto à lógica que explica e atualize-o quando a regra mudar.
 
 ## Skills locais
 
