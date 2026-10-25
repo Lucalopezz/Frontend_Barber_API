@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test:e2e": "playwright test",
-    "test:integration": "playwright test --config playwright.integration.config.ts"
+    "test:integration": "playwright test --config playwright.integration.config.ts",
+    "test:notifications": "playwright test --config playwright.notifications.config.ts",
+    "test:notifications:unit": "node --experimental-strip-types --test --test-isolation=none tests/notifications-cache.test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.2",

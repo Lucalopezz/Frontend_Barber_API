@@ -391,6 +391,16 @@ test("cookie protocol isolates an old direct-HTTP logout response from a later U
       return result.status;
     }, { api, sid: oldSession.sessionId }).catch(() => 0);
     await serverRevoked;
+    // Settle A's known revocation before B starts login: a navbar query can
+    // otherwise expire A while B is queued on the session lock. This scenario
+    // isolates the delayed Set-Cookie response, which remains held below.
+    const oldIdentity = await oldPage.evaluate(async (rejectedToken) => {
+      const session = await import("/src/auth/session.ts");
+      // A's JWT still has time left; force a server check instead of reusing it.
+      await session.refreshSession(rejectedToken).catch(() => undefined);
+      return session.getAuthState().status;
+    }, oldSession.accessToken);
+    expect(oldIdentity).toBe("anonymous");
     const newPage = await context.newPage();
     const newSession = await login(newPage, newUser);
     releaseResponse!();

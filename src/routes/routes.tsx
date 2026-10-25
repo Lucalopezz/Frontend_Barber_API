@@ -12,6 +12,7 @@ import { Profile } from "@/pages/user/profile";
 import { ShopManagementPage } from "@/pages/barberShop/manageShop";
 import { Appointments } from "@/pages/appointments/appointments";
 import { AvailabilityPage } from "@/pages/appointments/availability";
+import { Notifications } from "@/pages/notifications/notifications";
 
 export const routes = createBrowserRouter([
   {
@@ -19,6 +20,10 @@ export const routes = createBrowserRouter([
     element: <App />,
     errorElement: <ErrorComponent />,
     children: [
+      {
+        path: "/notifications",
+        element: <PrivateRoute><Notifications /></PrivateRoute>,
+      },
       {
         path: "/book/:id",
         element: (

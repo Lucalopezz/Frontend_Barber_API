@@ -45,6 +45,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Testes de cache e identidade das notificações
+        run: pnpm test:notifications:unit
+
       - name: Instalar Chromium e dependências do sistema
         run: pnpm exec playwright install --with-deps chromium
 

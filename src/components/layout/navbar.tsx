@@ -17,6 +17,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Link, NavLink } from "react-router-dom";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 interface NavbarProps {
   isAuthenticated: boolean;
@@ -75,6 +76,7 @@ export const Navbar = ({ isAuthenticated, user, onLogout }: NavbarProps) => {
             </nav>
           )}
           <div className="flex items-center gap-2">
+            {isAuthenticated && <NotificationBell />}
             {!isAuthenticated ? (
               <>
                 <Button asChild variant="ghost">
@@ -89,7 +91,7 @@ export const Navbar = ({ isAuthenticated, user, onLogout }: NavbarProps) => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" aria-label="Abrir menu da conta">
                     <UserRound size={17} aria-hidden="true" />
-                    <span className="hidden sm:inline">Minha conta</span>
+                    <span className="hidden lg:inline">Minha conta</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-60">

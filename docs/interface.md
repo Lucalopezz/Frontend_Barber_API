@@ -21,7 +21,13 @@ Celular: [marca                              conta]
 
 ## Conteúdo
 
-Uma ação principal por seção. Rótulos em português; estados de agendamento traduzidos. Políticas aparecem onde ajudam a decidir, com detalhes expansíveis. A reserva agora seleciona um profissional da equipe; não prometer favoritos, avaliações ou notificações que o produto não implementa.
+Uma ação principal por seção. Rótulos em português; estados de agendamento traduzidos. Políticas aparecem onde ajudam a decidir, com detalhes expansíveis. A reserva agora seleciona um profissional da equipe; não prometer favoritos ou avaliações que o produto não implementa.
+
+A caixa de notificações fica em `/notifications`, com acesso pelo sino no cabeçalho em desktop e celular. Mostra confirmações, alterações e cancelamentos do cliente ou profissional autenticado, além dos lembretes destinados ao cliente, com paginação. Alterações mostram serviço e horário anteriores e novos quando houver mudança; os horários usam o fuso da barbearia. As confirmações anteriores permanecem no histórico.
+
+O sino informa a contagem de não lidas também para leitores de tela. A ação “Marcar como lida” só altera o aviso após a confirmação da API; falhas mantêm o estado anterior e oferecem nova tentativa. A lista e a contagem consultam a API a cada 30 segundos em primeiro plano, além da atualização manual. O cache é separado por sessão e respostas antigas não atualizam uma nova identidade.
+
+Lembretes aparecem como “Lembrete de agendamento”, com o serviço, a barbearia e o horário da reserva. Usam a mesma ação de leitura e contagem dos demais avisos. O texto não promete entrega exatamente 24 horas antes: após uma interrupção do worker, o backend pode recuperar um lembrete enquanto o agendamento ainda for futuro.
 
 Gestão da barbearia usa destinos separados para dados, serviços e equipe. Expediente e folgas ficam em uma página própria do profissional, com duas abas. A navegação principal muda conforme o papel da conta; no celular há no máximo quatro destinos fixos. A conta deixa de duplicar a lista de agendamentos.
 

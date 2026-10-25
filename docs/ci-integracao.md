@@ -1,6 +1,6 @@
 # CI de integração entre os dois projetos
 
-O workflow `Integrated CI` executa a jornada existente de consulta e agendamento com Chromium, API e PostgreSQL reais, sem mocks HTTP. Ele roda em pull requests, pushes na `main` e execução manual dos dois repositórios. O frontend hospeda `.github/workflows/integration.yml`; o backend chama esse workflow por SHA imutável, mantendo o status no PR de origem. Não há deploy nem envio de eventos para outro repositório.
+O workflow `Integrated CI` executa as jornadas de consulta/agendamento e notificações com Chromium, API, PostgreSQL e Redis reais, sem mocks HTTP. Ele roda em pull requests, pushes na `main` e execução manual dos dois repositórios. O frontend hospeda `.github/workflows/integration.yml`; o backend chama esse workflow por SHA imutável, mantendo o status no PR de origem. Não há deploy nem envio de eventos para outro repositório.
 
 ## Escolha das revisões
 
@@ -21,11 +21,13 @@ O workflow precisa existir na branch padrão para execução manual. O override 
 
 ## Ambiente e isolamento
 
-Cada job recebe Ubuntu 24.04, Node 24, pnpm declarado no frontend e PostgreSQL 15 descartável, na porta local 5450. Instala os dois lockfiles congelados, gera Prisma Client, aplica somente migrations existentes no schema `barber_api_test`, compila os dois projetos e instala Chromium com suas dependências de sistema. Não usa Compose, env ou banco da máquina do mantenedor.
+Cada job recebe Ubuntu 24.04, Node 24, pnpm declarado no frontend, PostgreSQL 15 descartável na porta local 5450 e Redis 7.4 na porta 6380, ambos com healthcheck. Instala os dois lockfiles congelados, gera Prisma Client, aplica somente migrations existentes no schema `barber_api_test`, compila os dois projetos e instala Chromium com suas dependências de sistema. Não usa Compose, env ou banco da máquina do mantenedor.
 
 Os arquivos `.env.test` e `.env.development` são criados a partir do exemplo de teste do backend, com `NODE_ENV=test`, destino local exclusivo e JWT aleatório; arquivos preexistentes causam falha em vez de serem sobrescritos. O segundo arquivo atende ao script de geração do Prisma, apontando também para o destino de teste. Os env e o JWT não são publicados nos artefatos.
 
-O runner preserva as portas 3002/5175, servidores próprios, um worker e zero retries da [configuração integrada](../playwright.integration.config.ts). Não reaproveita servidores existentes. A jornada não roda junto de suítes da API que limpam o mesmo schema; os CIs separados têm seus próprios jobs e bancos. O Playwright encerra os servidores iniciados por ele; o GitHub remove o service container ao terminar o job.
+O runner preserva as portas 3002/5175, servidores próprios, um worker e zero retries da [configuração integrada](../playwright.integration.config.ts). Não reaproveita servidores existentes. As jornadas executam sequencialmente: primeiro `pnpm test:integration`, depois `pnpm test:notifications --output=test-results/notifications`. A segunda inicia também o worker compilado com Redis DB 1 e prefixo exclusivo e verifica confirmação, alteração, cancelamento, leitura e lembrete gerado pelo cron real de um minuto. A fixture de lembrete ajusta somente a reserva criada pelo teste no schema isolado para torná-la elegível; a caixa é aberta depois da entrega para comprovar independência de uma página conectada.
+
+O passo de notificações só é executado quando o checkout exato do frontend contém `playwright.notifications.config.ts`, preservando a execução reutilizável com uma revisão anterior da `main` do frontend. Isso não substitui a escolha de revisões compatíveis: uma revisão frontend com o runner exige um backend com worker e notificações. A jornada não roda junto de suítes da API que limpam o mesmo schema; os CIs separados têm seus próprios jobs e bancos. O Playwright encerra os servidores iniciados por ele; o GitHub remove os service containers ao terminar o job.
 
 O timeout é de 20 minutos e qualquer falha obrigatória reprova o check. Uma execução nova cancela a anterior apenas quando repositório, workflow, referência, evento e seleção do par coincidem. A permissão é `contents: read`, sem PAT nem `secrets: inherit`. O token padrão fica restrito à consulta da API pública do GitHub e às actions de checkout, que não persistem credenciais. Comandos dos projetos não recebem credenciais do mantenedor.
 
@@ -33,7 +35,7 @@ O timeout é de 20 minutos e qualquer falha obrigatória reprova o check. Uma ex
 
 1. Abra o job **Jornada com API e PostgreSQL** e consulte o resumo com origem, evento, modo `main`/`override` e os dois SHAs. No backend, o job aparece dentro da chamada reutilizada.
 2. Baixe o artefato `integration-<run_id>-<run_attempt>`, retido por sete dias. `integration-revisions.json` registra a seleção, as revisões e se os checkouts foram conferidos. Ele é publicado também quando o setup ou a resolução falha, se chegou a ser criado.
-3. Quando o teste de navegador falhar, o mesmo artefato inclui `frontend/test-results/` com o trace retido pelo Playwright. Abra o arquivo com `pnpm exec playwright show-trace /caminho/trace.zip`. Traces podem conter dados fictícios de sessão.
+3. Quando o teste de navegador falhar, o mesmo artefato inclui `frontend/test-results/` com o trace retido pelo Playwright; a jornada de notificações escreve em `frontend/test-results/notifications/` para preservar as evidências da primeira jornada. Abra o arquivo com `pnpm exec playwright show-trace /caminho/trace.zip`. Traces podem conter dados fictícios de sessão.
 4. Se não houver trace, verifique o primeiro passo com erro: uma falha de checkout, dependências, migrations ou build ocorre antes do navegador. Reexecutar uma combinação exige os dois SHAs registrados; não presuma que a `main` continua no mesmo commit.
 
 Um SHA sintaticamente válido precisa existir no repositório do par; a resolução consulta esse repositório e rejeita erro HTTP ou divergência. Somente os dois repositórios públicos Barber estão na allowlist. Não use `pull_request_target` ou segredos para executar código de PR.
