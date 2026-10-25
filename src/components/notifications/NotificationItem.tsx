@@ -7,6 +7,7 @@ const titles: Record<Notification["type"], string> = {
   appointment_created: "Agendamento confirmado",
   appointment_updated: "Agendamento alterado",
   appointment_cancelled: "Agendamento cancelado",
+  appointment_reminder: "Lembrete de agendamento",
 };
 
 function appointmentTime(value: string, timezone: string) {

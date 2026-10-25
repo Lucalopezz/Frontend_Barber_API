@@ -1,7 +1,7 @@
 export interface Notification {
   id: string;
   appointmentId: string;
-  type: "appointment_created" | "appointment_updated" | "appointment_cancelled";
+  type: "appointment_created" | "appointment_updated" | "appointment_cancelled" | "appointment_reminder";
   serviceName: string;
   barberShopName: string;
   startsAt: string;

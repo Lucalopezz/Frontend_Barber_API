@@ -337,3 +337,33 @@ test("leitura atrasada da conta anterior não altera a lista nem a contagem da p
   await expect(page.getByText("Lida", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Corte conta A em Barbearia Escola", { exact: true })).toHaveCount(0);
 });
+
+test("mostra lembrete recuperado no fuso da loja e permite leitura sem apagar a confirmação", async ({ page }) => {
+  await page.clock.install({ time: new Date("2030-01-07T10:00:00.000Z") });
+  let readAt: string | null = null;
+  const reminder: Notification = {
+    ...notice, id: "reminder-1", type: "appointment_reminder", createdAt: "2030-01-07T09:59:00.000Z",
+  };
+  await mockNotifications(page, (route) => route.fulfill({ json: collection([{ ...reminder, readAt }, notice]) }), {
+    unread: (route) => route.fulfill({ json: { data: { count: readAt ? 1 : 2 } } }),
+    read: (route) => {
+      expect(new URL(route.request().url()).pathname).toBe("/api/v1/notifications/reminder-1/read");
+      expect(route.request().method()).toBe("PATCH");
+      readAt = "2030-01-07T10:00:00.000Z";
+      return route.fulfill({ json: { data: { ...reminder, readAt } } });
+    },
+  });
+  await page.goto("/notifications");
+  const item = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: "Lembrete de agendamento", exact: true }) });
+  await expect(item.getByText("Corte em Barbearia Escola", { exact: true })).toBeVisible();
+  await expect(item.locator("time")).toHaveText("07/01/2030, 09:00");
+  await expect(item.getByText("Horário da barbearia", { exact: true })).toBeVisible();
+  await expect(item).not.toContainText("24 horas");
+  await expect(item.getByRole("link", { name: "Ver na agenda", exact: true })).toHaveAttribute("href", "/appointments");
+  await expect(page.getByRole("link", { name: "Notificações", exact: true })).toHaveAccessibleDescription("2 notificações não lidas.");
+  await item.getByRole("button", { name: "Marcar como lida", exact: true }).click();
+  await expect(item.getByText("Lida", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Notificações", exact: true })).toHaveAccessibleDescription("1 notificação não lida.");
+  const confirmation = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: "Agendamento confirmado", exact: true }) });
+  await expect(confirmation.getByText("Não lida", { exact: true })).toBeVisible();
+});

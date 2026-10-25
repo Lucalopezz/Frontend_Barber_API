@@ -44,6 +44,8 @@ A configuração inicia e encerra API (3002), Vite (5175) e worker separados. O 
 
 Essa jornada fica fora de `pnpm test:integration`, que continua sem exigir Redis. Execute as jornadas e suítes de banco sequencialmente; a limpeza remove somente as fixtures dessa execução no schema `barber_api_test`.
 
+Na parte 3, o cenário Playwright com respostas controladas verifica a exibição e leitura de `appointment_reminder`. A jornada real acima continua cobrindo os fluxos das partes 1 e 2; não altera o relógio nem os dados de produção para forçar lembretes. Seleção de candidatos, limite de 24 horas, recuperação após atraso e descarte após remarcação/cancelamento são cobertos pelos testes específicos do backend com relógio controlado.
+
 ## Histórico — assistente simulado removido
 
 O antigo `assistant.real.spec.ts` cobria consultas de catálogo, serviços e disponibilidade sem escrita. Foi removido junto da funcionalidade. A jornada real de agendamento em `booking.real.spec.ts` permanece ativa, com os mesmos requisitos de banco e execução sequencial descritos acima.

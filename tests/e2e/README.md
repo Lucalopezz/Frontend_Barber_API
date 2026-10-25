@@ -36,11 +36,13 @@ Políticas: `booking.spec.ts` congela o relógio para manter as reservas no futu
 
 Os mocks de sessão retornam o contrato completo e simulam a recuperação por cookie; não usam mais token em localStorage. Os testes de autenticação verificam ausência de credenciais persistentes, bootstrap antes da rota protegida, duas abas com quatro requisições concorrentes e uma renovação efetiva, logout offline após reload, respostas antigas, saída durante login e login enfileirado antes de logout, cookies ambíguos e troca de senha sincronizada. Falhas de reserva cobrem criação e remarcação com resposta perdida, rascunho por identidade, revalidação e bloqueio durável de reenvio incerto. Consulte [sessões na interface](../../docs/sessoes-autenticacao.md).
 
-## Notificações — partes 1 e 2
+## Notificações — partes 1, 2 e 3
 
 `notifications.spec.ts` cobre confirmação no fuso da barbearia com navegador em UTC, link para a agenda, paginação, carregamento, caixa vazia, erro com nova tentativa e preservação da última consulta. Também verifica acesso anônimo sem chamada à API privada, troca de conta com resposta anterior atrasada e acesso pelo sino em 360 px sem rolagem horizontal.
 
 A parte 2 acrescenta alterações com dados anteriores e novos, cancelamentos, leitura confirmada pelo servidor, falha sem falso sucesso e contador acessível no sino. Os testes verificam consulta a cada 30 segundos somente em primeiro plano, contagem indisponível sem zero inventado e resposta de leitura antiga sem modificar a próxima conta. A lista e o contador têm cache separado por sessão; a mutação cancela o transporte na troca de identidade e confere sessão/geração antes de escrever no cache.
+
+A parte 3 acrescenta `appointment_reminder`: o aviso mostra o título “Lembrete de agendamento”, o serviço e o horário no fuso da barbearia, preservando o acesso à agenda. O cenário simula a chegada atrasada de um lembrete ainda válido, verifica leitura e contagem e mantém a confirmação anterior no histórico. Não afirma entrega exata a 24 horas. As regras de seleção, cron e descarte de lembretes obsoletos são verificadas no backend; a interface exibe os avisos que a API entrega.
 
 ```bash
 pnpm test:e2e tests/e2e/notifications.spec.ts --workers=1

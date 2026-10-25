@@ -24,7 +24,7 @@ export function Notifications() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 id="notifications-heading" className="page-title">Notificações</h1>
-          <p className="mt-2 text-muted-foreground">Acompanhe confirmações, alterações e cancelamentos dos seus agendamentos.</p>
+          <p className="mt-2 text-muted-foreground">Acompanhe confirmações, alterações, cancelamentos e lembretes dos seus agendamentos.</p>
         </div>
         <Button variant="outline" disabled={isFetching} onClick={refresh}>
           <RefreshCw size={16} aria-hidden="true" /> Atualizar
@@ -41,7 +41,7 @@ export function Notifications() {
         <div className="rounded-xl border bg-white px-6 py-12 text-center">
           <Bell className="mx-auto mb-4 text-muted-foreground" size={28} aria-hidden="true" />
           <h2 className="text-2xl font-semibold">Nenhuma notificação por enquanto</h2>
-          <p className="mt-2 text-muted-foreground">Quando houver uma confirmação ou mudança nos seus agendamentos, o aviso aparecerá aqui.</p>
+          <p className="mt-2 text-muted-foreground">Quando houver um aviso sobre seus agendamentos, ele aparecerá aqui.</p>
         </div>
       )}
       {data && data.data.length > 0 && (
